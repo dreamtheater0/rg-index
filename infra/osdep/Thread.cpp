@@ -27,9 +27,9 @@ bool Thread::start(void (*starter)(void*),void* arg,bool boost)
       return true;
    return SetThreadPriority(reinterpret_cast<HANDLE>(handle),THREAD_PRIORITY_ABOVE_NORMAL);
 #else
-   // Avoid a warning, boost is not supported for Unix currently
-   if (boost)
-      arg=arg;
+   // Avoid warnings
+   (void)arg;
+   (void)boost;
 
    // Initialize some attributes
    pthread_t tid=0;

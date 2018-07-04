@@ -230,6 +230,7 @@ std::string SPARQLLexer::getIRIValue() const
    // Get the value of the current token interpreting IRI escapes
 {
    std::string::const_iterator limit=(hasTokenEnd?tokenEnd:pos);
+   (void)limit;
    std::string result;
    for (std::string::const_iterator iter=tokenStart,limit=(hasTokenEnd?tokenEnd:pos);iter!=limit;++iter) {
       char c=*iter;
@@ -246,6 +247,7 @@ std::string SPARQLLexer::getLiteralValue() const
    // Get the value of the current token interpreting literal escapes
 {
    std::string::const_iterator limit=(hasTokenEnd?tokenEnd:pos);
+   (void)limit;
    std::string result;
    for (std::string::const_iterator iter=tokenStart,limit=(hasTokenEnd?tokenEnd:pos);iter!=limit;++iter) {
       char c=*iter;

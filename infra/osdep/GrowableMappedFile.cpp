@@ -222,8 +222,8 @@ bool GrowableMappedFile::growPhysically(ofs_t increment)
    if (fcntl (data->file, F_PREALLOCATE, &fst)==-1)
       return false;
 
-   struct stat64 stat;
-   if (fstat64 (data -> file, &stat)!=0)
+   struct stat stat;
+   if (fstat(data->file, &stat)!=0)
       return false;
    if (ftruncate(data->file, stat.st_size + increment)!=0) // NOT fst.fst_bytesAllocated!
       return false;

@@ -1,6 +1,5 @@
 #include "rts/database/Database.hpp"
 #include "rg-index/rg-index.hpp"
-#include <glog/logging.h>
 #include <time.h>
 #include <iostream>
 #include <stdio.h>
@@ -47,15 +46,6 @@ int main(int /*argc*/,char* argv[])
    if (mkdir(dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
       cerr << "unable to make foler:" << dir << endl;
    }
-   /*
-   if (chdir(dir) != 0) {
-      cerr << "unable to move to foler:" << dir << endl;
-   }
-   */
-
-   google::InitGoogleLogging(argv[0]);
-   google::InstallFailureSignalHandler();
-
 
    RGindex rgindex(argv[1], dir);
    rgindex.build(db, maxL, minSup);

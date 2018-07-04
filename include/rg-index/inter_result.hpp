@@ -55,7 +55,6 @@ public:
 };
 
 class Elist : public map<unsigned, ElistVlist> {
-   unsigned source, target; // in the interresult graph
    Elist::iterator iter;
 public:
    ~Elist() {

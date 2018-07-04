@@ -2,7 +2,6 @@
 #include <fstream>
 #include <cassert>
 #include <algorithm>
-#include <glog/logging.h>
 #include "rpath/RPathSegment.hpp"
 #include "rg-index/inter_result.hpp"
 #include "rts/operator/IndexScan.hpp"
@@ -153,7 +152,6 @@ void InterResultTuple::addBackwardEdge(InterResultTuple &foreward_results,
 void InterResultTuple::initWithOneSizeGraph(Database &db, GSPAN::DFSCode& dfscode, 
                                             unsigned p, unsigned old_p) {
    // make Vlists for 1-size graph 
-   LOG(INFO) << "Make 1-size graph. predcate: " << p << ", old_p:" << old_p;
    cout << "Make 1-size graph. predcate: " << p << ", old_p:" << old_p << endl;
    cout.flush();
    dfscode.push(0, 1, p, GSPAN::EDGE_TYPE_NORMAL);

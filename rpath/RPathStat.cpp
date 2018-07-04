@@ -10,14 +10,9 @@ RPathStat::RPathStat(char *dataset, char *path) {
    char fileName[256], stat[256];
    memset(fileName, 0, 256);
    memset(stat, 0, 256);
-#if 0
-   if (getenv("REVERSE"))
-      sprintf(fileName, "%s_%u.stat2_r", dataset, maxL);
-   else
-      sprintf(fileName, "%s_%u.stat2", dataset, maxL);
-#endif
    sprintf(fileName, "%s.stat2",dataset);
 
+   (void)path;
    ifstream ifs_stat(fileName, ios::in);
 
    unsigned p1, p2, cnt=0;

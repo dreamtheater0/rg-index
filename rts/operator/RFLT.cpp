@@ -91,6 +91,7 @@ unsigned RFLT::next()
 void RFLT::print(PlanPrinter& out)
    // Print the operator tree. Debugging only.
 {
+   (void)fltInfos;
    out.beginOperator("RFLT",expectedOutputCardinality,observedOutputCardinality);
    if (rpathFLT) rpathFLT->print(out);
    input->print(out);

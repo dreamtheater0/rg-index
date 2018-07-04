@@ -18,7 +18,7 @@
 using namespace std;
 //---------------------------------------------------------------------------
 /// Maximum amount of usable memory. XXX detect at runtime!
-static const unsigned memoryLimit = sizeof(void*)*(1<<27) * 8;
+static const unsigned memoryLimit = sizeof(void*)*(1<<27);
 //---------------------------------------------------------------------------
 namespace {
 //---------------------------------------------------------------------------

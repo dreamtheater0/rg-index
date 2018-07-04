@@ -7,7 +7,7 @@ INCLUDE = -I/home/twlee/rdf3x-gspan/include
 #CPPFLAGS = -DNDEBUG -O3 -fomit-frame-pointer -funroll-loops -fPIC \
 	-mtune=pentium4 -Wall -Wno-deprecated ${INCLUDE}
 
-CPPFLAGS = -g -ggdb -Wall -Wno-deprecated -lglog ${INCLUDE}
+CPPFLAGS = -g -ggdb -Wall -Wno-deprecated ${INCLUDE}
 
 OBJS = graph.o util.o dfs.o # ismin.o gspan.o  main.o
 

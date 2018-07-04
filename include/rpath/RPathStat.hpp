@@ -27,7 +27,7 @@ class RPathStat
    map<Pair, unsigned> stats;
 
    public:
-   RPathStat(char *dataset, char *path);
+   RPathStat(char *dataset, char *rpathdir);
    ~RPathStat();
 
    unsigned getStat(unsigned p1, unsigned p2);

@@ -690,6 +690,7 @@ static Operator* translateRFLT_M(Runtime& runtime,const map<unsigned,Register*>&
          map<unsigned,Register*> tempBindings2;
          // do not comment out this!!
          Operator* input=translatePlan(runtime,context,newProjection,tempBindings2,registers,(*iter2));
+         (void)input;
 
          // Find common ones
          if (leftVariables.size()<rightVariables.size()) {

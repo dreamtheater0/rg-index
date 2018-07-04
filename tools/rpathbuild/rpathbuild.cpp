@@ -16,14 +16,14 @@
 #include <queue>
 #include <set>
 #include <map>
-#include <glog/logging.h>
 #include <algorithm>
 #include <cmath>
 #include <time.h>
 #include <sys/stat.h>
+#include <unistd.h>
 using namespace std;
-#define PARTITION ((unsigned) atoi(getenv("PARTITION"))) // thread의 개수
-#define PPATHNUM ((unsigned) atoi(getenv("PPATHNUM"))) // 한 thread가 merge시에 몇개를 담당하는가
+#define PARTITION ((unsigned) atoi(getenv("PARTITION")))
+#define PPATHNUM ((unsigned) atoi(getenv("PPATHNUM")))
 #define QUOTEME_(x) #x
 #define QUOTEME(x) QUOTEME_(x)
 
@@ -68,17 +68,6 @@ RPathTreeIndex::Node *getSuffixNode(RPathTreeIndex &rpathTreeIdx, PPath &ppath)
    return NULL;
 }
 //---------------------------------------------------------------------------
-static char* getStrPpath(vector<unsigned>& ppath, char *buf) {
-   for (vector<unsigned>::const_iterator iter=ppath.begin(),limit=ppath.end();
-        iter!=limit;++iter) {
-      if (iter == ppath.begin())
-         buf += sprintf(buf, "%u", (*iter));
-      else
-         buf += sprintf(buf, ",%u", (*iter));
-   }
-   return buf;
-}
-//---------------------------------------------------------------------------
 typedef struct {
    unsigned idx;
    unsigned pathID;
@@ -99,9 +88,6 @@ typedef struct {
    vector<PPath*>* remains;
 } RemoveInfrequentArgs;
 //---------------------------------------------------------------------------
-// suffix node가 one blk인 경우를 미리 제거 하기 위한 코드
-// multi-thread
-// BTC dataset에서 너무 느려서 multi-thread로 수정
 void removeInfrequent(RemoveInfrequentArgs *args)
 {
    unsigned myIDX = args->myIDX;
@@ -131,17 +117,12 @@ void removeInfrequent(RemoveInfrequentArgs *args)
       suffix.Add(p);
       RPathTreeIndex::Node *suffixNode = rpathTreeIdx->SearchNode(suffix);
 
-      // suffixNode가 없다면 결과가 없다는 것이기 때문에 무시
-//      if (!suffixNode || len != suffixNode->len)
-//         continue;
-
       if (suffixNode && len == suffixNode->len) {
          // if suffixNode is infrequent
          if (suffixNode->skip)
             continue;
          
          if (suffixNode->cardinality < args->minCnt / 2.0f) 
-            //args->rpathTreeIdx->minTh * (len+1))
             continue;
       }
 
@@ -211,11 +192,11 @@ void getNodeLists(GetNodeLists3Args *args)
          break;
       ppaths.insert(ppaths.end(), start, end); 
       unsigned size = ppaths.size();
-      LOG(INFO) << "- start getNodeLists. [" << myIDX << "] p: " 
+      std::cout << "- start getNodeLists. [" << myIDX << "] p: " 
                 << p << ", size:" << size << ", start_idx:" << start_idx;
       if (myIDX==0) {
          if (iter%1000==0)
-            LOG(INFO) << "- p: " << p << ", start_idx:" << start_idx;
+            std::cout << "- p: " << p << ", start_idx:" << start_idx;
       }
 
       rpflt_value.value = 0;
@@ -274,7 +255,6 @@ void getNodeLists(GetNodeLists3Args *args)
       std::vector<unsigned>::iterator iter, next;
 
       while (heap.size() > 0) {
-         // Heap에서 가장 작은 값을 가져온다
          entity = heap.front();
          heap_value = entity.value;    
 
@@ -296,7 +276,6 @@ void getNodeLists(GetNodeLists3Args *args)
                heap.pop_back();
 
                if (!scanEnd[heap_idx]) {
-                  // 해당 entity의 scan이 안끝났으면 scan
                   while (!scanEnd[heap_idx] && nodeIDs[heap_idx] < subject.value) {
                      if (!scans[heap_idx]->next()) {
                         scanEnd[heap_idx] = true;
@@ -322,21 +301,16 @@ void getNodeLists(GetNodeLists3Args *args)
             if (allEnd) break;
          }
          if (allEnd) break;
-         // 여기서 부터는 subject.value == heap_value
          assert(heap_value == subject.value);
 
-         // heap_value와 같은 entity를 heap에서 가져온다
          std::vector<unsigned> buf/* entity.idx*/;
          while (heap_value == heap.front().value) {
-            // Heap에서 가장 작은 값을 가져온다
             entity = heap.front();
             pop_heap(heap.begin(), heap.end(), compare);
             heap.pop_back();
             heap_idx = entity.idx;
             buf.push_back(entity.idx);
 
-            // 해당 entity의 scan이 안끝났으면 scan에서 한개를 가져와 
-            // heap에 넣는다
             if (!scanEnd[heap_idx]) {
                if (!scans[heap_idx]->next()) scanEnd[heap_idx] = true;
                else {
@@ -353,7 +327,6 @@ void getNodeLists(GetNodeLists3Args *args)
          }
 
          prev_value=subject.value;
-         // predicate scan에서 같은 subject를 가진 object 값을 buf에 저장
          unsigned prev_object=~0u, buf_size=buf.size();
 
          while (subject.value == prev_value) {
@@ -374,19 +347,6 @@ void getNodeLists(GetNodeLists3Args *args)
                //unsigned size = sl->list.size();
                if (sl->nondiscriminative) continue;
                sl->list.insert(object.value);
-               /*
-               if (size >= args->rpathTreeIdx->getMinCnt(len + 1) &&
-                   !args->rpathTreeIdx->isDiscriminative(sl->suffixNode, len + 1, sl->list.size())) {
-                  sl->list.clear();
-                  sl->nondiscriminative = true;
-                  scanEnd[idx] = true;
-                  // Do not read from the scan[idx]
-                  PPath newPpath = (*(args->ppaths))[sl->ppathID];
-                  newPpath.Add(p);
-
-                  LOG(INFO) << newPpath.getStr() << " is nondiscriminative and stopped ";
-               }
-               */
             }
             prev_value = subject.value;
             prev_object = object.value;
@@ -418,15 +378,10 @@ void getNodeLists(GetNodeLists3Args *args)
             SortedList* sl = sls[m];
             delete sl;
          }
-         //sl->list.clear();
          continue;
       }
 
-      //LOG(INFO) << "- end getNodeLists. [" << myIDX << "] p: " << p << " cnt:" << cnt;
-
       // Handle results
-      //LOG(INFO) << "- start extracting. partition: " << myIDX;
-      //vector <PPath> newppaths;
       unsigned byte = 0;
       pthread_mutex_lock(&mutex_lock); {
       for (unsigned m=0;m<sls.size();m++) {
@@ -434,7 +389,6 @@ void getNodeLists(GetNodeLists3Args *args)
          unsigned size = sl->list.size();
 
          if (size == 0 || sl->nondiscriminative) {
-//             size < args->rpathTreeIdx->getMinCnt(len+1)) {
             sl->list.clear();
             delete sl;
             continue;
@@ -442,18 +396,8 @@ void getNodeLists(GetNodeLists3Args *args)
 
          PPath *newPpath = new PPath(p, *ppaths[sl->ppathID]);
 
-         // get (N-1) suffix 
-         /*
-         RPathTreeIndex::Node *suffixNode = getSuffixNode(*args->rpathTreeIdx, *newPpath);
-         if (!suffixNode) {
-            assert(false);
-         }*/
-
-         //LOG(INFO) << newPpath.getStr() << " size:" << size << " suffixNode:" << suffixNode->ppath.getStr() << " suffixSize:" << suffixNode->cardinality;
-
          if (args->rpathTreeIdx->isDiscriminative(sl->suffixNode, newPpath->size(), size) &&
              size > args->minCnt/4.0f) {
-//             size > args->rpathTreeIdx->minTh * (newPpath->size() - 1)) {
             RPathTreeIndex::NodeIDLoader reader(sl->list);
 
             unsigned startPage, nextPage;
@@ -464,10 +408,6 @@ void getNodeLists(GetNodeLists3Args *args)
             if (newPpath->size() < args->maxL)
                args->ppaths_new->push_back(newPpath);
          }
-//         else {
-//            LOG(INFO) << "Nondiscriminative. " << newPpath->getStr() << " size:" << size 
-//                      << " suffixSize:" << sl->suffixNode->cardinality;
-//         }
          
          sl->list.clear();
          delete sl;
@@ -493,10 +433,10 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
    std::vector<PPath*> ppathList;
    PPath nullPpath;
 
-   LOG(INFO) << "Start building RPathFilter";
-   LOG(INFO) << "the number of predicates: " << plist.size();
+   std::cout << "Start building RPathFilter";
+   std::cout << "the number of predicates: " << plist.size();
 
-   LOG(INFO) << "building iteration: 1";
+   std::cout << "building iteration: 1";
    map<unsigned, unsigned > nodeCnt;
    map<unsigned, unsigned > tCnt;
    vector<struct rb_sorter> sorterList;
@@ -534,7 +474,6 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
          cnt+=ret;
          if (prevNodeID != object.value) {
             results.insert(object.value);
-//            cout << prevNodeID << " " << object.value << endl;
             assert(prevNodeID < object.value);
             prevNodeID = object.value;
          }
@@ -565,30 +504,12 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
 
    // determine th_mincnt and predicates to remove
    sort(sorterList.begin(), sorterList.end(), sorterLessThan);
-   //LOG(INFO) << "skip cnt:" << sorterList.size() * 0.025;
+   //std::cout << "skip cnt:" << sorterList.size() * 0.025;
    for (unsigned i=0,limit=sorterList.size(); i<limit; i++) {
-      //if (rpathTreeIdx.skipP && i < limit * 0.0025) {
-      //if (rpathTreeIdx.skipP && sorterList[i].cnt > 2000000) { 
-         // for dbpsp
-      //   LOG(INFO) << "skip pred:" << sorterList[i].p << " size:" << sorterList[i].cnt;
-      //   continue;
-      //}
-      //unsigned cnt = nodeCnt[sorterList[i].p];
-      //if (maxCnt==0 || maxCnt < cnt) maxCnt=cnt;
-
       predList.push_back(sorterList[i].p);
       PPath* newPpath = new PPath(sorterList[i].p, nullPpath);
       ppathList.push_back(newPpath);
    }
-   /*
-   rpathTreeIdx.th_mincnt = 0;
-   if (getenv("TH_MINCNT")) {
-      //rpathTreeIdx.th_mincnt = maxCnt * 0.05;
-      //rpathTreeIdx.th_mincnt = maxCnt * 0.01; // dbpsb
-      rpathTreeIdx.th_mincnt = //maxCnt * 0.00001; // lubm 
-   }
-   */
-   //LOG(INFO) << "maxCnt: " << maxCnt << " th_mincnt:" << rpathTreeIdx.th_mincnt;
 
    // check skip flag for iter-1
    map<unsigned, RPathTreeIndex::Node *> *nodeList = rpathTreeIdx.GetRootChildren();
@@ -599,7 +520,7 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
       if (node->cardinality < rpathTreeIdx.getMinCnt(1))
          node->skip=true;
    }
-   LOG(INFO) << " iteration:1. mincnt:" << rpathTreeIdx.getMinCnt(1);
+   std::cout << " iteration:1. mincnt:" << rpathTreeIdx.getMinCnt(1);
 
    unsigned iteration=1;
    unsigned memory = atoi(getenv("MEM"));
@@ -613,7 +534,7 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
       ppaths_new.clear();
       iteration++;
 
-      LOG(INFO) << "building iteration: " << iteration 
+      std::cout << "building iteration: " << iteration 
                 << " mincnt:" << rpathTreeIdx.getMinCnt(iteration);
       double th1 = rpathTreeIdx.getMinCnt(iteration-1);
       double th2 = rpathTreeIdx.getMinCnt(iteration);
@@ -622,11 +543,11 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
            limit=predList.end(); iter!=limit; iter++) {
          // Simultaneously merge M ppaths in queue
          unsigned p = *iter;
-         LOG(INFO) << "- predicate: " << p;
+         std::cout << "- predicate: " << p;
 
          if (nodeCnt[p] < th1 || nodeCnt[p] < th2/4.0f) {
              //args->rpathTreeIdx->minTh * (iteration - 1)) {
-            LOG(INFO) << "Infrequent pred:" << p << " size:" << nodeCnt[p] 
+            std::cout << "Infrequent pred:" << p << " size:" << nodeCnt[p] 
                       << " th1:" << th1 << " th2:" << th2/4.0f;
             continue;
          }
@@ -634,7 +555,6 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
          vector<PPath*> remains;
          // Remove infrequent
          vector<PPath*> resultPPaths[PARTITION];
-         //RemoveInfrequentArgs *args = new RemoveInfrequentArgs[PARTITION]; 
          for (unsigned n=0;n<PARTITION;n++) {
             args[n].inppaths = &ppaths;
             args[n].remains = &resultPPaths[n];
@@ -653,15 +573,15 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
             pthread_join(tid[n], (void **) &status);
             remains.insert(remains.end(), resultPPaths[n].begin(), resultPPaths[n].end());
          }
-         LOG(INFO) << "ppaths size:" << ppaths.size() << " remains size:" << remains.size();
+         std::cout << "ppaths size:" << ppaths.size() << " remains size:" << remains.size();
 
          unsigned ppathnum;
          long long totalMemory = memory * 1024;
          long long expectedMemory = 
          ((long long)PARTITION * 
-          ((long long)60 * (long long)nodeCnt[p] / (long long) (1024 * 1024)) + // 한 파티션의 node list 
-          (long long) 2); // 한 ppath를 처리하는데에 필요한 memory의 크기
-         LOG(INFO) << "predicate:" << p << " nodeCnt: " << nodeCnt[p]
+          ((long long)60 * (long long)nodeCnt[p] / (long long) (1024 * 1024)) +
+          (long long) 2);
+         std::cout << "predicate:" << p << " nodeCnt: " << nodeCnt[p]
                    << " totalMemory:" << totalMemory << " expectedMem:" << expectedMemory;
          ppathnum = totalMemory / expectedMemory;
 
@@ -669,7 +589,7 @@ void rpathBuild(Database& db, vector<unsigned>& plist, unsigned maxL, RPathTreeI
          if (ppathnum > remains.size())
             ppathnum = remains.size() / PARTITION;
          if (ppathnum < 1) ppathnum = 1;
-         LOG(INFO) << " - PPATH: " << ppathnum;
+         std::cout << " - PPATH: " << ppathnum;
 
          ppath_idx = 0;
          for (unsigned n=0;n<PARTITION;n++) {
@@ -742,18 +662,16 @@ int main(int argc,char* argv[])
    }
    cout << DIR << endl;
    if (mkdir(DIR, S_IRWXU) != 0) {
-      cerr << "unable to make foler:" << DIR << endl;
+      cerr << "unable to make folder:" << DIR << endl;
    }
    if (chdir(DIR) != 0) {
-      cerr << "unable to move to foler:" << DIR << endl;
+      cerr << "unable to move to folder:" << DIR << endl;
    }
 
-   google::InitGoogleLogging(argv[0]);
-   google::InstallFailureSignalHandler();
+   std::cout << "Retrieving the predicate list..." << endl;
 
-   LOG(INFO) << "Retrieving the predicate list..." << endl;
-
-   RPathTreeIndex temp_rpathTreeIdx(argv[1], ".", maxL, false);
+   sprintf(DIR, ".");
+   RPathTreeIndex temp_rpathTreeIdx(argv[1], DIR, maxL, false);
    vector<unsigned> plist = temp_rpathTreeIdx.getPlist(db);
    rpathBuild(db, plist, maxL, temp_rpathTreeIdx);
 }

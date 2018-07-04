@@ -6,7 +6,6 @@
 #include <iterator>
 #include <set>
 #include <string>
-#include <glog/logging.h>
 
 namespace GSPAN {
 
@@ -31,12 +30,6 @@ History::build(Graph &graph, PDFS *e) {
     }
 }
 
-
-/**
- * @brief  right-most path를 구성하는 edge의 DFS element를 DFSCode에서 찾아
- *         각 DFS element의 index를 맨 뒤쪽 edge부터 역순으로 
- *         rmpath vector에 저장한다. 
- */
 const RMPath&
 DFSCode::buildRMPath(void) {
     rmpath.clear();
@@ -57,26 +50,16 @@ DFSCode::buildRMPath(void) {
 
 void print_edge(int from, int to, int elabel, edge_type_t type) {
     if (type == EDGE_TYPE_NORMAL)
-       VLOG(1) << from << " " << to << " " << elabel << " ->";
+       std::cout << from << " " << to << " " << elabel << " ->";
     else 
-       VLOG(1) << from << " " << to << " " << elabel << " <-";
+       std::cout << from << " " << to << " " << elabel << " <-";
 }
 
-/**
- * @brief  edge를 탐색해 나가며 minimum DFS code를 확장한다.
- *   check 인자가 null인 경우 - minimum DFS code 생성. (return 값은 항상 true)
- *   check 인자가 null이 아닌 경우 - check가 minimum DFS code인지 검사.
- *   (return 값은 minimum이면 true, 아니면 false)
- *
- * forward edges: DFS spanning tree에 속하는 edge들.  (vi -> vj, i < j)
- * backward edges: 그 외의 edge들.  (vi -> vj,  i > j)
- */
 bool
 DFSCode::extendMinCode(Graph &g, Projected &p, DFSCode *check) {
     const RMPath& rmpath = buildRMPath();
     int max_dest = (*this)[rmpath[0]].dest;
-    //std::cout << "\nmax_dest=" << max_dest << "\n";
-    VLOG(1) << "max_dest=" << max_dest;
+    std::cout << "\nmax_dest=" << max_dest << "\n";
 
     Projected_map2 root;
     EdgeList edges;
@@ -88,16 +71,12 @@ DFSCode::extendMinCode(Graph &g, Projected &p, DFSCode *check) {
         for (unsigned int n = 0; n < p.size(); ++n) {
             PDFS *cur = &p[n];
             History history(g, cur);
-            /* rightmost path에 속한 vertex들 중 가장 오래전에 탐색한 것부터 
-             * 순서대로 다음 edge가 향하는 vertex가 있는지 찾음. */
             Edge *e = get_backward(g, history[rmpath[i]], history[rmpath[0]], 
                                    history);
             if (e) {
                 found = true;
                 root[e->elabel][e->type].push(e, cur);
                 new_dest = (*this)[rmpath[i]].src;
-                //std::cout << "\nextended backward edges\n";
-                VLOG(1) << "extended backward edges";
                 print_edge(e->from, e->to, e->elabel, e->type);
             }
         }
@@ -125,8 +104,6 @@ DFSCode::extendMinCode(Graph &g, Projected &p, DFSCode *check) {
         /* pure forward edge */
         if (get_forward_pure(g, history[rmpath[0]], history, edges)) {
             found = true; cur_found = true;
-            //std::cout << "\nextended forward edges\n";
-            VLOG(1) << "extended forward edges";
             for (EdgeList::iterator it = edges.begin(); 
                  it != edges.end(); ++it) {
                 fwd[max_dest][(*it)->elabel][(*it)->type].push(*it, cur);
@@ -138,8 +115,6 @@ DFSCode::extendMinCode(Graph &g, Projected &p, DFSCode *check) {
         for (int i = 0; !cur_found && i < (int)rmpath.size(); ++i) {
             if (get_forward_rmpath(g, history[rmpath[i]], history, edges)) {
                 found = true; cur_found = true;
-                //std::cout << "\nextended backtracked forward edges\n";
-                VLOG(1) << "extended backtracked forward edges";
                 for (EdgeList::iterator it = edges.begin(); 
                      it != edges.end(); ++it) {
                     fwd[(*this)[rmpath[i]].src][(*it)->elabel][(*it)->type].push(*it, cur);
@@ -162,9 +137,6 @@ DFSCode::extendMinCode(Graph &g, Projected &p, DFSCode *check) {
         return extendMinCode(g, typelabel->second, check);
     }
 
-    /* minimum DFS code를 원래 노드의 ID대로 출력 */
-    //std::cout << "\nDFS code (w/ original vertex id)\n";
-    VLOG(1) << "DFS code (w/ original vertex id)";
     int sn = 0;
     bool *is_set = (bool*)malloc(sizeof(bool) * g.size());
     for (unsigned int i = 0; i < g.size(); i++) 
@@ -188,16 +160,11 @@ DFSCode::extendMinCode(Graph &g, Projected &p, DFSCode *check) {
 
             print_edge(h[i]->from, h[i]->to, h[i]->elabel, h[i]->type);
         }
-        //std::cout << "----\n";
-        VLOG(1) << "----";
     }
     free(is_set);
     return true;
 }
 
-/**
- * @brief  DFS code가 minimum DFS code인지 검사한다.
- */
 bool 
 DFSCode::is_min(void) {
     if ((*this).size() == 1)
@@ -210,8 +177,6 @@ DFSCode::is_min(void) {
     EdgeList root_edges;
 
     get_forward_root(g, root_edges);
-    //std::cout << "\nroot edges\n";
-    VLOG(1) << "root edges";
     for (EdgeList::iterator it = root_edges.begin(); 
          it != root_edges.end(); ++it) {
         root[(*it)->elabel].push(*it, 0);
@@ -225,9 +190,6 @@ DFSCode::is_min(void) {
     return min_dc.extendMinCode(g, elabel->second, this);
 }
 
-/**
- * @brief  input graph의 minimum DFS code를 생성한다.
- */
 void
 DFSCode::fromGraph(Graph &g) {
     clear();
@@ -236,8 +198,6 @@ DFSCode::fromGraph(Graph &g) {
     EdgeList root_edges;
 
     get_forward_root(g, root_edges);
-    //std::cout << "\nroot edges\n";
-    VLOG(1) << "root edges";
     for (EdgeList::iterator it = root_edges.begin(); 
          it != root_edges.end(); ++it) {
         root[(*it)->elabel].push(*it, 0);
@@ -247,7 +207,7 @@ DFSCode::fromGraph(Graph &g) {
     Projected_iterator elabel = root.begin();
     push(0, 1, elabel->first, EDGE_TYPE_NORMAL);
 
-    extendMinCode(g, elabel->second, 0 /* minimum DFS code 생성 */);
+    extendMinCode(g, elabel->second, 0 /* minimum DFS code */);
 }
 
 void

@@ -4,7 +4,6 @@
 #include <cassert>
 #include <math.h>
 #include <queue>
-#include <glog/logging.h>
 #include "rpath/PPath.hpp"
 #include "rpath/RPathTreeIndex.hpp"
 #include "rts/buffer/BufferManager.hpp"
@@ -33,8 +32,6 @@ RPathTreeIndex::RPathTreeIndex(char *dataset, char *path, unsigned maxL, bool ) 
    root.startIndexPage = 0;
    root.cardinality = 0;
    root.updateInfo = NULL;
-//   root.updateInfo->hasDeleted = false;
-//   root.updateInfo->isUpdated = false;
    root.children = NULL;
 
    memset(fileName, 0, 256);
@@ -50,8 +47,6 @@ RPathTreeIndex::RPathTreeIndex(char *dataset, char *path, unsigned maxL, bool ) 
    page = 0;
 
    SetParams();
-   //pthread_mutex_init(&mutex_lock, NULL);
-   //pthread_mutex_init(&mutex_lock_idx, NULL);
 }
 
 RPathTreeIndex::~RPathTreeIndex() {
@@ -94,10 +89,10 @@ void RPathTreeIndex::SetParams() {
       skipP=true;
    }
    
-   LOG(INFO) << "th_mincnt:" << th_mincnt;
-   LOG(INFO) << "th_diff:" << th_diff;
-   LOG(INFO) << "is_reverse:" << is_reverse;
-   LOG(INFO) << "is_varp:" << is_varp;
+   std::cout << "th_mincnt:" << th_mincnt;
+   std::cout << "th_diff:" << th_diff;
+   std::cout << "is_reverse:" << is_reverse;
+   std::cout << "is_varp:" << is_varp;
 }
 
 RPathTreeIndex::RPathTreeIndex(char *dataset, char *path, unsigned maxL) {
@@ -131,7 +126,7 @@ RPathTreeIndex::RPathTreeIndex(char *dataset, char *path, unsigned maxL) {
    unsigned startPage, startIdxPage, cardinality, byte;
 
    while(ifs_stat >> ppathInfo && !ifs_stat.eof()) {
-      // PPath length (필요없음)
+      // PPath length
       len = strtok_r(ppathInfo, "|", &saveptr);
       // PPath 
       ppathStr = strtok_r(NULL, "|", &saveptr);
@@ -148,24 +143,12 @@ RPathTreeIndex::RPathTreeIndex(char *dataset, char *path, unsigned maxL) {
       unsigned l=atoi(len);
       if (l > maxL)
          break;
-      /*
-
-      RPathTreeIndex::Node *suffixNode = getSuffixNode(ppath);
-
-      if (ppath.size() > 1 && !suffixNode)
-         continue;
-
-      if (!this->isDiscriminative(suffixNode, ppath.size(), cardinality))
-         continue;
-      */
-
-      //LOG(INFO) << ppathStr << " " << cardinality;
       InsertIntoIdx(startPage, startIdxPage, cardinality, byte, ppathStr);
       vlist_cnt++;
    }
    page=lastPage;
-   LOG(INFO) << "vlist cnt:" << vlist_cnt;
-   LOG(INFO) << "last page:" << lastPage;
+   std::cout << "vlist cnt:" << vlist_cnt;
+   std::cout << "last page:" << lastPage;
 }
 
 RPathTreeIndex::Node* RPathTreeIndex::InsertIntoIdx(unsigned startPage, 
@@ -185,8 +168,6 @@ RPathTreeIndex::Node* RPathTreeIndex::InsertIntoIdx(unsigned startPage,
    if (newNode->cardinality < getMinCnt(ppath.path.size()))
       newNode->skip=true;
 
-//   newNode->updateInfo->hasDeleted = false;
-//   newNode->ppath.change(ppathStr);
    newNode->predicate = ppath.path.back();
    newNode->len=ppath.path.size();
 
@@ -270,22 +251,11 @@ RPathTreeIndex::Node* RPathTreeIndex::SearchNode(Node& root, PPath& ppath, unsig
 }
 
 void RPathTreeIndex::NodePrint(Node& node) {
-   cerr /*<< node.ppath.getStr()*/ << "|" << node.startPage 
+   cerr << "|" << node.startPage 
         << "|" << node.startIndexPage << "|" << node.cardinality << endl;
 }
 
-void RPathTreeIndex::Print(Node& /*root*/, unsigned /*level*/) {
-//  for (unsigned i=0;i<level;i++) cout << " ";
-   /*
-   for (vector<Node *>::const_iterator iter=root.children.begin(),
-        limit=root.children.end(); iter!=limit;++iter) {
-      NodePrint(*(*iter));
-   }
-   for (vector<Node *>::const_iterator iter=root.children.begin(),
-        limit=root.children.end(); iter!=limit;++iter) {
-      Print(*(*iter), level+1);
-   }
-   */
+void RPathTreeIndex::Print(Node&, unsigned) {
 }
 
 unsigned RPathTreeIndex::FindCardinality(unsigned predicate)
@@ -304,19 +274,6 @@ unsigned RPathTreeIndex::FindCardinality(unsigned predicate)
 
 void RPathTreeIndex::Print()
 {
-   /*
-   for (vector<Node *>::const_iterator iter=root.children.begin(),
-        limit=root.children.end(); iter!=limit;++iter) {
-      Node *node = *iter;
-      NodePrint(*node);
-   }
-
-   for (vector<Node *>::const_iterator iter=root.children.begin(),
-        limit=root.children.end(); iter!=limit;++iter) {
-      Node *node = *iter;
-      Print(*node, 0);
-   }
-   */
 }
 
 
@@ -407,10 +364,6 @@ void RPathTreeIndex::packFullyNodeIDLeaves(NodeIDLoader& reader, unsigned &size,
 
    startPage = page;
    while (reader.next(nodeID)) {
-      // Try to pack it on the current page
-      // 차이가 127(2^7-1)까지는 1 byte에 저장 (길이 정보 없이, MSB:0)
-      // 차이가 127(2^7)보다 크면 길이 정보와 함께 저장 (MSB:1)
-      // MSB:0, data도 0인 경우는 end를 의미한다
       unsigned len;
 
       size++;
@@ -423,14 +376,8 @@ void RPathTreeIndex::packFullyNodeIDLeaves(NodeIDLoader& reader, unsigned &size,
       if ((bufferPos==headerSize)||(bufferPos+len>RPathSegment::pageSize)) {
          // Write the partial page
          if (bufferPos>headerSize) {
-            /*if (!islocked) {
-               // Critical section ***********
-               pthread_mutex_lock(&mutex_lock);
-               islocked = true;
-            }*/
             writeUint32(buffer,page+1);
             memset(buffer+bufferPos,0,RPathSegment::pageSize-bufferPos);
-            //byte+=bufferPos/1024;
             writePage(ofs_rf,page,buffer);
             ++page;
          }
@@ -451,23 +398,11 @@ void RPathTreeIndex::packFullyNodeIDLeaves(NodeIDLoader& reader, unsigned &size,
    }
    // Flush the last page
    writeUint32(buffer,0);
-   //assert(bufferPos <= RPathSegment::pageSize);
-//   for (unsigned index=bufferPos;index<RPathSegment::pageSize;index++)
-//      buffer[index]=0;
    memset(buffer+bufferPos,0,RPathSegment::pageSize-bufferPos);
    byte+=bufferPos;
-   /*
-   if (!islocked) {
-      // Critical section ***********
-      pthread_mutex_lock(&mutex_lock);
-      islocked = true;
-      startPage = page;
-   }*/
    writePage(ofs_rf,page,buffer);
    ++page;
    nextPage = page;
-   //pthread_mutex_unlock(&mutex_lock);
-   // *********** Critical section 
 }
 //---------------------------------------------------------------------------
 static char* getStrPpath(vector<unsigned>& ppath, char *buf) {
@@ -480,8 +415,6 @@ static char* getStrPpath(vector<unsigned>& ppath, char *buf) {
    }
    return buf;
 }
-//---------------------------------------------------------------------------
-static inline int cmpValue(uint64_t l,uint64_t r) { return (l<r)?-1:((l>r)?1:0); }
 //---------------------------------------------------------------------------
 RPathTreeIndex::Node* RPathTreeIndex::outputStat(PPath &ppath, 
                                  unsigned startPage, unsigned startIndex, unsigned byte,
@@ -501,7 +434,7 @@ RPathTreeIndex::Node* RPathTreeIndex::outputStat(PPath &ppath,
       curNode->startPage = startPage;
       curNode->startIndexPage = startIndex;
       curNode->cardinality = size;
-      curNode->rpathSgm = NULL; /* new RPathSegment(&file, startPage, startIndex, startIndex-startPage);*/
+      curNode->rpathSgm = NULL;
       return curNode;
    }
    return InsertIntoIdx(startPage, startIndex, size, byte, ppath.getStr().c_str());
@@ -511,8 +444,6 @@ void RPathTreeIndex::getNodeLists(Database& db, unsigned p, RPathTreeIndex::Node
                                   PPath& ppath, set<unsigned> &results)
 {
    // Result
-   //LOG(INFO) << "- start getNodeLists. p: " << p;
-
    if (ppath.size() == 0) {
       AggregatedIndexScan* scan;
       Register subject,predicate,object;
@@ -599,8 +530,6 @@ void RPathTreeIndex::getNodeLists(Database& db, unsigned p, RPathTreeIndex::Node
             break;
       }
    }
-
-   //LOG(INFO) << "- end getNodeLists. p: " << p << " cnt:" << results.size();
    delete scan;
    return;
 }
@@ -626,74 +555,17 @@ vector<unsigned> RPathTreeIndex::getPlist(Database& db)
    }
    delete scan;
 
-   if (is_varp)
+   if (is_varp) {
       predList.push_back(ALLPREDICATE);
-
-//   if (is_reverse) { // we should always add reverse predicates for statistics
       for (vector<unsigned>::iterator iter=predList.begin(), limit=predList.end(); iter!=limit; ++iter) {
          assert ((*iter) < (REVERSE_PRED));
          predList2.push_back((*iter) + (REVERSE_PRED));
       }
       predList.insert(predList.end(), predList2.begin(), predList2.end());
-//   }
+   }
 
    return predList;
 }
-//---------------------------------------------------------------------------
-/*
-static unsigned getBlkSize(RPathTreeIndex::NodeIDLoader& reader)
-{
-   const unsigned headerSize = 4; // Next pointer
-   unsigned bufferPos=headerSize;
-
-   unsigned lastNodeID=0, nodeID, blkCnt=0;
-
-   while (reader.next(nodeID)) {
-      // Try to pack it on the current page
-      // 차이가 127(2^7-1)까지는 1 byte에 저장 (길이 정보 없이, MSB:0)
-      // 차이가 127(2^7)보다 크면 길이 정보와 함께 저장 (MSB:1)
-      // MSB:0, data도 0인 경우는 end를 의미한다
-      unsigned len;
-
-      if ((nodeID-lastNodeID)<127)
-         len=1; else
-         len=1+bytes(nodeID-lastNodeID);
-
-      // Tuple too big or first element on the page?
-      if ((bufferPos==headerSize)||(bufferPos+len>RPathSegment::pageSize)) {
-         // Write the partial page
-         if (bufferPos>headerSize) {
-            blkCnt++;
-         }
-         // Write the first element fully
-         bufferPos=headerSize;
-         bufferPos+=4;
-      } else {
-         // No, pack them
-         if ((nodeID-lastNodeID)<127) {
-            bufferPos++;
-         } else {
-            bufferPos++;
-            unsigned value = nodeID-lastNodeID;
-            if (value>=(1<<24)) {
-               bufferPos += 4;
-            } else if (value>=(1<<16)) {
-               bufferPos += 3;
-            } else if (value>=(1<<8)) {
-               bufferPos += 2;
-            } else {
-               bufferPos += 1;
-            }
-         }
-      }
-      // Update the values
-      lastNodeID=nodeID;
-   }
-   // Flush the last page
-   blkCnt++;
-
-   return blkCnt;
-} */
 //---------------------------------------------------------------------------
 void RPathTreeIndex::rpathBuild(Database& db, unsigned maxL)
 {
@@ -701,10 +573,10 @@ void RPathTreeIndex::rpathBuild(Database& db, unsigned maxL)
    std::queue<PPath> queue;
    PPath nullPpath;
 
-   LOG(INFO) << "Start building RPathFilter";
+   std::cout << "Start building RPathFilter";
 
    vector<unsigned> plist = getPlist(db);
-   LOG(INFO) << "the number of predicates: " << plist.size();
+   std::cout << "the number of predicates: " << plist.size();
 
    unsigned iteration=0, maxSize=0, vlistcnt=0, prev_len=0;
    queue.push(nullPpath);
@@ -713,7 +585,7 @@ void RPathTreeIndex::rpathBuild(Database& db, unsigned maxL)
       PPath ppath = queue.front();
       queue.pop();
 
-      LOG(INFO) << "building iteration: " << ++iteration;
+      std::cout << "building iteration: " << ++iteration;
 
       unsigned len = ppath.size();
 
@@ -762,8 +634,6 @@ void RPathTreeIndex::rpathBuild(Database& db, unsigned maxL)
          unsigned size = results.size();
          if (maxSize < size)
             maxSize = size;
-//         LOG(INFO) << "- ppath: " << newPpath.getStr() << " size:" << size << " maxSize:" << maxSize;
-
          if (size == 0) {
             iter++;
             continue;
@@ -778,12 +648,6 @@ void RPathTreeIndex::rpathBuild(Database& db, unsigned maxL)
             add = true;
             if (newPpath.size() < maxL)
                queue.push(newPpath);
-            /*
-            if (suffixNode) 
-            cout << newPpath.getStr() << " is discriminative. blkcnt:" << nextPage - startPage 
-                 << " size: " << size << " suffixSize:" << suffixNode->cardinality 
-                 << " th_diff:" << th_diff << " real_diff:" << (double) size/ (double) suffixNode->cardinality << endl;
-                 */
          }
 
          if (ppath.size() == 0) {
@@ -835,20 +699,20 @@ void RPathTreeIndex::rpathUpdate(Database& db, unsigned maxL,
    ofs_rf.open(fileName, ios::out|ios::app|ios::binary);
    ofs_stat.open(statName, ios::out|ios::trunc);
 
-   LOG(INFO) << "Start updating RPathFilter";
+   std::cout << "Start updating RPathFilter";
 
    vector<unsigned> plist = getPlist(db);
-   LOG(INFO) << "the number of predicates: " << plist.size();
+   std::cout << "the number of predicates: " << plist.size();
 
    unsigned iteration=0, maxSize=0;
    queue.push(nullPpath);
 
    for(set<unsigned>::iterator iter=inserted.preds.begin(),
        limit=inserted.preds.end(); iter!=limit; iter++)
-      LOG(INFO) << "inserted predicates: " << *iter;
+      std::cout << "inserted predicates: " << *iter;
    for(set<unsigned>::iterator iter=deleted.preds.begin(),
        limit=deleted.preds.end(); iter!=limit; iter++)
-      LOG(INFO) << "deleted predicates: " << *iter;
+      std::cout << "deleted predicates: " << *iter;
 
    Timestamp start;
    unsigned updatedVlist=0, prev_len=0;
@@ -858,12 +722,11 @@ void RPathTreeIndex::rpathUpdate(Database& db, unsigned maxL,
       PPath ppath = queue.front();
       queue.pop();
 
-      LOG(INFO) << "updating iteration: " << ++iteration;
+      std::cout << "updating iteration: " << ++iteration;
 
       bool isPInInserted, isPInDeleted; 
       RPathTreeIndex::Node *prefixNode = SearchNode(ppath);
       if (prefixNode==&root){
-         // null ppath인 경우임
          prefixNode=NULL;
       }
 
@@ -879,7 +742,6 @@ void RPathTreeIndex::rpathUpdate(Database& db, unsigned maxL,
       for (std::vector<unsigned>::iterator iter=plist.begin();
            iter!=plist.end();) {
          unsigned p = *iter;
-         //LOG(INFO) << "- predicate: " << p;
 
          PPath newPpath = ppath;
          newPpath.Add(p);
@@ -899,17 +761,8 @@ void RPathTreeIndex::rpathUpdate(Database& db, unsigned maxL,
             if (suffixNode == NULL ||
                 suffixNode->len != ppath.size()) {
                iter++;
-               //LOG(INFO) << "ppath: " << newPpath.getStr() << " skipped. 1. " << p;
                continue;
             }
-            /*
-            else if (th_mincnt > 0 && 
-                     suffixNode->startIndexPage - suffixNode->startPage <= th_mincnt+len-1) {
-               iter++;
-               LOG(INFO) << "ppath: " << newPpath.getStr() << " skipped. 2. " << p;
-               continue;
-            }
-            */
          }
 
          // Checking update conditions
@@ -920,7 +773,6 @@ void RPathTreeIndex::rpathUpdate(Database& db, unsigned maxL,
          set<unsigned> results;
          bool newlyCreated=true;
          if (!prefixNode) {
-            // 길이 1짜리 predicate path
             if (isPInDeleted || isPInInserted) {
                getNodeLists(db, p, node, ppath, results);
             }
@@ -929,27 +781,21 @@ void RPathTreeIndex::rpathUpdate(Database& db, unsigned maxL,
          }
          else {
             if (!isPInDeleted && !prefixNode->updateInfo->hasDeleted) {
-               // Delta를 체크해 계산
                bool hasInserted=prefixNode->updateInfo->insertDelta.size();
                if (isPInInserted && hasInserted) {
-                  // TODO::
                   getNodeLists(db, p, node, ppath, results);
                }
                else if (!isPInInserted && hasInserted) {
-                  // TODO:: non-discriminative인 경우
                   getNodeListsFromDelta(db, p, prefixNode->updateInfo->insertDelta, curNode, results);
                }
                else if (isPInInserted && !hasInserted) {
-                  // TODO:: non-discriminative인 경우
                   getNodeListsFromInserted(p, ppath, node, curNode, inserted.triples_pso[p], results);
                }
                else if (!isPInInserted && !hasInserted) {
-                  // non-discriminative여서 없었던 경우인지 체크하자
                   if (suffixNode->updateInfo->isUpdated & !curNode) {
                      getNodeLists(db, p, node, ppath, results);
                   }
                   else {
-                     // none
                      newlyCreated=false;
                   }
                }
@@ -966,7 +812,6 @@ void RPathTreeIndex::rpathUpdate(Database& db, unsigned maxL,
             // for debugging
             if (maxSize < size)
                maxSize = size;
-//            LOG(INFO) << "- ppath: " << newPpath.getStr() << " size:" << size << " maxSize:" << maxSize;
 
             if (size == 0) {
                iter++;
@@ -1002,15 +847,11 @@ void RPathTreeIndex::rpathUpdate(Database& db, unsigned maxL,
             }
          }
          else if (curNode) {
-            // 여기는 curNode가 있는 상태임
-            // Vlist에 변화는 없으나 discriminative인지는 다시 확인해야 함
-            // suffixNode가 변경된경우
             if (isDiscriminative(suffixNode, newPpath.size(), curNode->cardinality)) {
                discriminative = true;
                outputStat(newPpath, curNode->startPage, curNode->startIndexPage, 0,
                           curNode->cardinality, NULL, curNode);
             }
-            // delta는 없다
          }
 
          if (ppath.size() == 0 && size < th_mincnt) {
@@ -1078,26 +919,17 @@ void RPathTreeIndex::computeDelta(RPathTreeIndex::Node* curNode, set<unsigned> r
       }
    }
 
-   // curScan에 남은 노드는 모두 inserted로
    while(!isCurScanEnd) {
       inserted.push_back(curNodeID);
       if(!curScan.next(curNodeID))
          isCurScanEnd=true;
    }
-
-/*
-   LOG(INFO) << "compute delta: " << curNode->ppath.getStr() 
-             << ", inserted: " << inserted.size() 
-             << ", hasDeleted: " << curNode->updateInfo->hasDeleted;
-             */
 }
 //---------------------------------------------------------------------------
 void RPathTreeIndex::getNodeListsFromDelta(Database& db, unsigned p, vector<unsigned> delta, 
       RPathTreeIndex::Node *curNode, set<unsigned> &results)
 {
    // Result
-//   LOG(INFO) << "- start getNodeListsFromDelta. p: " << p;
-
    // p sgmt
    IndexScan* scan;
    Register subject,predicate,object, rpflt_value;
@@ -1170,8 +1002,6 @@ void RPathTreeIndex::getNodeListsFromDelta(Database& db, unsigned p, vector<unsi
             break;
       }
    }
-
-//   LOG(INFO) << "- end getNodeListsFromDelta. p: " << p << " cnt:" << results.size();
    delete scan;
    return;
 }
@@ -1181,8 +1011,6 @@ void RPathTreeIndex::getNodeListsFromInserted(unsigned /*p*/, PPath& /*ppath*/,
       RPathTreeIndex::Node *curNode, vector<struct Triple_s> *insertedTriples, set<unsigned> &results)
 {
    // Result
-//   LOG(INFO) << "- start getNodeListsFromInserted. p: " << p;
-
    if (curNode) {
       RPathSegment::Scan oldScan;
       curNode->rpathSgm = new RPathSegment(&file, curNode->startPage, curNode->startIndexPage,
@@ -1202,12 +1030,8 @@ void RPathTreeIndex::getNodeListsFromInserted(unsigned /*p*/, PPath& /*ppath*/,
    }
 
    unsigned nodeID;
-//   RPathTreeIndex::Node* node = SearchNode(ppath);
    RPathSegment::Scan prefixScan;
-//   node->rpathSgm = new RPathSegment(&file, node->startPage, node->startIndexPage,
-//                                     node->startIndexPage-node->startPage);
    if(!prefixScan.first(*node->rpathSgm)) {
-//      delete node->rpathSgm;
       return;
    }
    nodeID = prefixScan.getValue1();
@@ -1242,9 +1066,6 @@ void RPathTreeIndex::getNodeListsFromInserted(unsigned /*p*/, PPath& /*ppath*/,
          object = (*iter).o;
       }
    }
-
-//   delete node->rpathSgm;
-//   LOG(INFO) << "- end getNodeListsFromInserted. p: " << p << " cnt:" << results.size();
    return;
 }
 //---------------------------------------------------------------------------

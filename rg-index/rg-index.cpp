@@ -6,7 +6,6 @@
 #include "gspan/dfs.hpp"
 #include <cassert>
 #include <algorithm>
-#include <glog/logging.h>
 
 //---------------------------------------------------------------------------
 typedef struct {
@@ -242,9 +241,7 @@ void RGindex::build(Database &db, unsigned maxL, unsigned minSup)
    unsigned prev_p1, prev_p2;
    vector<predicate_support_t> plist;
 
-   LOG(INFO) << "Retrieving the predicate list..." << endl;
    unsigned maxEdgeCnt=atoi(getenv("MAXEDGECNT"));
-
    while (!isEnd) {
       unsigned cnt1=0, cnt2=0,edgecnt=0;
       predicate_support_t pred_sup;
@@ -297,8 +294,6 @@ void RGindex::build(Database &db, unsigned maxL, unsigned minSup)
    cout << maxEdgecnt << endl;
    for(vector<predicate_support_t>::const_iterator iter=plist.begin(), end=plist.end();
        iter!=end; iter++) {
-      LOG(INFO) << "Predicate:" << (*iter).predicate << " Support:" << (*iter).support 
-                << " edgecnt:" << (*iter).edgecnt;
       predMap_new[predID]=(*iter).predicate;
       predMap_old[(*iter).predicate]=predID;
       suppMap[predID]=(*iter).support;
@@ -407,7 +402,6 @@ void RGindex::getPossiblePredicates(hash_tbl_t *hash_tbl, set<unsigned> &forward
 //---------------------------------------------------------------------------
 void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultTuple &old_results) 
 {
-   VLOG(1) << "subgraphMining. old_result.offsets:" << old_results.offsets.size();
    // get the right most path
    GSPAN::RMPath rmpath=dfscode.buildRMPath();
 
@@ -426,8 +420,6 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
    unsigned curMinSup=minSup*(dfscode.size()+1);
    // before extension, we check the support
    if (old_results.support<curMinSup) {
-      VLOG(1) << "Old Infrequent Pattern!. " << "minSup:" << curMinSup
-         << " Support:" << old_results.support;
       return;
    }
 
@@ -461,9 +453,6 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
       // get possible predicates 
       set<unsigned> forward_preds, backward_preds;
       getPossiblePredicates(&hash_tbl, forward_preds, backward_preds, curMinSup);
-      VLOG(1) << "source:" << source << ", forward_preds:" << forward_preds.size()
-              << ", backward_preds:" << backward_preds.size();
-
       // add forward edges
       for (set<unsigned>::iterator iter2=forward_preds.begin(),
            end2=forward_preds.end(); iter2!=end2; iter2++) {
@@ -471,16 +460,11 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
          if (dfscode.hasSameDFS(source, pred, GSPAN::EDGE_TYPE_NORMAL))
             continue;
          dfscode.push(source, newVertexID, pred, GSPAN::EDGE_TYPE_NORMAL);
-         VLOG(1) << "New DFS Code: ";
-         VLOG(1) << dfscode;
          if (!dfscode.is_min()) { 
-            VLOG(1) << "Non-minimum DFS Code!!!";   
             GSPAN::Graph g;
             GSPAN::DFSCode dfscode2;
             dfscode.toGraph(g);
             dfscode2.fromGraph(g);
-            VLOG(1) << "This is the minimum DFS Code!!!";
-            VLOG(1) << dfscode2;
             dfscode.pop();
             continue;
          }
@@ -489,18 +473,13 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
          // extension
          InterResultTuple new_results(&old_results);
          if (!new_results.addForwardEdge(*db, hash_tbl, predMap_new[pred], false)) {
-            VLOG(1) << "Too large results!! We give up.";
             dfscode.pop();
             continue;
          }
          if (new_results.support<curMinSup) {
-            VLOG(1) << "Infrequent Pattern!. " << "minSup:" << curMinSup
-                    << " Support:" << new_results.support;
             dfscode.pop();
             continue;
          }
-         VLOG(1) << "Frequent Pattern!. " << "minSup:" << curMinSup 
-                 << " Support:" << new_results.support;
          insert(dfscode, new_results);
 
          if (maxL>dfscode.size())
@@ -512,16 +491,11 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
                dfscode.pop();
                dfscode.push(source, dest, pred, GSPAN::EDGE_TYPE_NORMAL);
 
-               VLOG(1) << "Backward expansion. New DFS Code: ";
-               VLOG(1) << dfscode;
                if (!dfscode.is_min()) { 
-                  VLOG(1) << "Non-minimum DFS Code!!!";   
                   GSPAN::Graph g;
                   GSPAN::DFSCode dfscode2;
                   dfscode.toGraph(g);
                   dfscode2.fromGraph(g);
-                  VLOG(1) << "This is the minimum DFS Code!!!";
-                  VLOG(1) << dfscode2;
                   continue;
                }
                cout << "Backward expansion. " << dfscode << endl;
@@ -529,12 +503,8 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
                back_new_results.addBackwardEdge(new_results, dest, newVertexID);
 
                if (back_new_results.support<curMinSup) {
-                  VLOG(1) << "Infrequent Pattern!. " << "minSup:" << curMinSup
-                     << " Support:" << back_new_results.support;
                   continue;
                }
-               VLOG(1) << "Frequent Pattern!. " << "minSup:" << curMinSup 
-                       << " Support:" << back_new_results.support;
                insert(dfscode, back_new_results);
 
                if (maxL>dfscode.size())
@@ -550,16 +520,11 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
          if (dfscode.hasSameDFS(source, pred, GSPAN::EDGE_TYPE_REVERSE))
             continue;
          dfscode.push(source, newVertexID, pred, GSPAN::EDGE_TYPE_REVERSE);
-         VLOG(1) << "New DFS Code: ";
-         VLOG(1) << dfscode;
          if (!dfscode.is_min()) { 
-            VLOG(1) << "Non-minimum DFS Code!!!";   
             GSPAN::Graph g;
             GSPAN::DFSCode dfscode2;
             dfscode.toGraph(g);
             dfscode2.fromGraph(g);
-            VLOG(1) << "This is the minimum DFS Code!!!";
-            VLOG(1) << dfscode2;
             dfscode.pop();
             continue;
          }
@@ -568,18 +533,13 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
          // extension
          InterResultTuple new_results(&old_results);
          if (!new_results.addForwardEdge(*db, hash_tbl, predMap_new[pred], true)) {
-            VLOG(1) << "Too large results!! We give up.";
             dfscode.pop();
             continue;
          }
          if (new_results.support<curMinSup) {
-            VLOG(1) << "Infrequent Pattern!. " << "minSup:" << curMinSup
-                    << " Support:" << new_results.support;
             dfscode.pop();
             continue;
          }
-         VLOG(1) << "Frequent Pattern!. " << "minSup:" << curMinSup 
-                 << " Support:" << new_results.support;
          insert(dfscode, new_results);
 
          if (maxL>dfscode.size())
@@ -591,16 +551,11 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
                dfscode.pop();
                dfscode.push(source, dest, pred, GSPAN::EDGE_TYPE_REVERSE);
 
-               VLOG(1) << "Backward expansion. New DFS Code: ";
-               VLOG(1) << dfscode;
                if (!dfscode.is_min()) { 
-                  VLOG(1) << "Non-minimum DFS Code!!!";   
                   GSPAN::Graph g;
                   GSPAN::DFSCode dfscode2;
                   dfscode.toGraph(g);
                   dfscode2.fromGraph(g);
-                  VLOG(1) << "This is the minimum DFS Code!!!";
-                  VLOG(1) << dfscode2;
                   continue;
                }
                cout << "Backward expansion. " << dfscode << endl;
@@ -609,12 +564,8 @@ void RGindex::subgraphMining(unsigned maxL, GSPAN::DFSCode dfscode, InterResultT
                back_new_results.addBackwardEdge(new_results, dest, newVertexID);
 
                if (back_new_results.support<curMinSup) {
-                  VLOG(1) << "Infrequent Pattern!. " << "minSup:" << curMinSup
-                     << " Support:" << back_new_results.support;
                   continue;
                }
-               VLOG(1) << "Frequent Pattern!. " << "minSup:" << curMinSup 
-                       << " Support:" << back_new_results.support;
                insert(dfscode, back_new_results);
 
                if (maxL>dfscode.size())

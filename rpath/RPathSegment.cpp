@@ -14,10 +14,6 @@
 /// The size of the header on each fact page
 static const unsigned headerSize = 4;
 //---------------------------------------------------------------------------
-/// Helper functions
-static inline unsigned readInner1(const unsigned char* page,unsigned slot) { return Segment::readUint32Aligned(page+16+8*slot); }
-static inline unsigned readInnerPage(const unsigned char* page,unsigned slot) { return Segment::readUint32Aligned(page+16+8*slot+4); }
-//---------------------------------------------------------------------------
 RPathSegment::RPathSegment(MemoryMappedFile* file,unsigned tableStart,unsigned indexRoot,unsigned pages)
    : tableStart(tableStart),indexRoot(indexRoot),
      pages(pages),file(file)

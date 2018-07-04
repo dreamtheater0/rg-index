@@ -14,7 +14,6 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include <glog/logging.h>
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -143,8 +142,6 @@ int main(int argc,char* argv[])
       cout << "usage: " << argv[0] << " <database> [sparqlfile]" << endl;
       return 1;
    }
-
-   google::InitGoogleLogging(argv[0]);
 
    // Open the database
    Database db;

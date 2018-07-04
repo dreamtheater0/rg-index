@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <glog/logging.h>
+#include <unistd.h>
 
 #define QUOTEME_(x) #x
 #define QUOTEME(x) QUOTEME_(x)
@@ -57,11 +57,8 @@ int main(int argc,char* argv[])
       cerr << "unable to move to foler:" << DIR << endl;
    }
 
-   google::InitGoogleLogging(argv[0]);
-   google::InstallFailureSignalHandler();
-
-   LOG(INFO) << argv[1] << " " << maxL << " TH_DIFF:" QUOTEME(TH_DIFF) " TH_MINBLK:" QUOTEME(TH_MINBLK) " REVERSE:" QUOTEME(REVERSE) " VARPREDICATE:" QUOTEME(VARP) << endl;
-   LOG(INFO) << "Retrieving the predicate list..." << endl;
+   std::cout << argv[1] << " " << maxL << " TH_DIFF:" QUOTEME(TH_DIFF) " TH_MINBLK:" QUOTEME(TH_MINBLK) " REVERSE:" QUOTEME(REVERSE) " VARPREDICATE:" QUOTEME(VARP) << endl;
+   std::cout << "Retrieving the predicate list..." << endl;
 
    char dir[256];
    strcpy(dir, ".");

@@ -13,9 +13,9 @@
 // San Francisco, California, 94105, USA.
 //---------------------------------------------------------------------------
 class BufferManager;
-class BufferRequest;
-class BufferRequestExclusive;
-class BufferRequestModified;
+struct BufferRequest;
+struct BufferRequestExclusive;
+struct BufferRequestModified;
 class Partition;
 class Segment;
 class SegmentInventorySegment;

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
-#include <glog/logging.h>
 #include "rpath/RPathSegment.hpp"
 #include "rg-index/inter_result.hpp"
 #include "rts/operator/IndexScan.hpp"
@@ -106,7 +105,6 @@ bool InterResult::addForwardEdge(Database &db, unsigned source, unsigned newvert
 
    unsigned neighborID=vertices[sourceID].neighbors[0];
    Elist *old_elist=old_result.elistmap[pair<unsigned, unsigned> (sourceID,neighborID)];
-   //cout << old_elist << " " << old_elist->size() << endl;
    Elist::iterator iter=old_elist->begin(), limit=old_elist->end();
    unsigned vID=(*iter).first, v1, v2;
    scan->first(); 
@@ -312,7 +310,6 @@ void InterResult::initWithOneSizeGraph(Database &db, GSPAN::DFSCode& dfscode,
    elistmap[pair<unsigned, unsigned> (1, 0)]=elist2=new Elist;
 
    // make Vlists for 1-size graph 
-   LOG(INFO) << "Make 1-size graph. predcate: " << p << ", old_p:" << old_p;
    cout << "Make 1-size graph. predcate: " << p << ", old_p:" << old_p << endl;
    dfscode.push(0, 1, p, GSPAN::EDGE_TYPE_NORMAL);
 
@@ -345,9 +342,6 @@ void InterResult::initWithOneSizeGraph(Database &db, GSPAN::DFSCode& dfscode,
       prev=v1;
    } while (!isEnd);
 
-   // TODO: sort the neighbors by .....what?
-
-   LOG(INFO) << "size1: " << results[0]->size() << ", size2: " << results[1]->size() << endl;
    delete scan;
 
    // support

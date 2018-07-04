@@ -150,7 +150,6 @@ inline bool prev_combination(BidIt n_begin, BidIt n_end,
 BidIt r_begin, BidIt r_end)
 {
   
-  bool boolsame=false;
   BidIt marked;//for r
   BidIt r_marked;
   BidIt n_marked;
@@ -241,8 +240,6 @@ inline bool prev_combination(
 	BidIt r_end,
 	Prediate Equal)
 {
-  
-  bool boolsame=false;
   BidIt marked;//for r
   BidIt r_marked;
   BidIt n_marked;

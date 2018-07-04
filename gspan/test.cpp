@@ -3,7 +3,6 @@
 #include <fstream>
 #include <iostream>
 #include <unistd.h>
-#include <glog/logging.h>
 
 void 
 usage(void) {

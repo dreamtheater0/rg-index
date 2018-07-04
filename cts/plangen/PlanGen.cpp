@@ -1195,21 +1195,6 @@ Plan* PlanGen::translate(Database& db,QueryGraph& query)
    return best;
 }
 //---------------------------------------------------------------------------
-static Plan* copyPlan(PlanContainer& plans, Plan *source)
-{
-   Plan* target=plans.alloc();
-
-   if (source->left) {
-      Plan* left = copyPlan(plans, source->left);
-      *target=*source;
-      target->left = left;
-   }
-   else 
-      *target=*source;
-
-   return target;
-}
-//---------------------------------------------------------------------------
 bool PlanGen::getRPathFLTSelectivityCosts(vector<RPathTreeIndex::Node*>& rflts, 
                                           unsigned predicate, bool subject, 
                                           double &selectivity, double &costs)

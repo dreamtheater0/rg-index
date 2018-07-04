@@ -14,7 +14,7 @@
 #include <vector>
 //---------------------------------------------------------------------------
 class Operator;
-class Plan;
+struct Plan;
 class Register;
 class Runtime;
 class QueryGraph;

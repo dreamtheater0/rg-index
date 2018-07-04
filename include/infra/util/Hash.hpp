@@ -1,5 +1,5 @@
 #ifndef H_infra_util_Hash
-#define H_intra_util_Hash
+#define H_infra_util_Hash
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x

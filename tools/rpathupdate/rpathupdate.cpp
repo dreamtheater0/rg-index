@@ -5,7 +5,6 @@
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
-#include <glog/logging.h>
 #include "infra/osdep/Timestamp.hpp"
 
 using namespace std;
@@ -27,9 +26,6 @@ static void importStream(DifferentialIndex& diff,istream& in)
 //---------------------------------------------------------------------------
 int main(int argc,char* argv[])
 {
-   google::InitGoogleLogging(argv[0]);
-   google::InstallFailureSignalHandler();
-
    // Greeting
    cerr << "RPath Index Updater" << endl;
 
@@ -39,8 +35,6 @@ int main(int argc,char* argv[])
            << "<insert_triples_file> <delete_triples_file> <rpathDIR>" << endl;
       return 1;
    }
-
-   // 이미 database에 update가 모두 반영되어 있는 것을 가정한다
 
    // Open the database
    Database db;
@@ -59,18 +53,6 @@ int main(int argc,char* argv[])
    importStream(inserted, in);
    inserted.getRPathUpdateInfo(insert_info);
 
-   /*
-   vector<struct Triple_s>& triples = insert_info.triples_pso;
-   for(unsigned i=0; i < triples.size(); i++) {
-      cout << triples[i].s << " " << triples[i].p << " " << triples[i].o << " " << endl;
-   }
-
-   set<unsigned>& preds = insert_info.preds;
-   set<unsigned>::iterator iter;
-   for(set<unsigned>::iterator iter=preds.begin(), limit=preds.end(); iter!=limit;iter++) {
-      cout << (*iter) << endl;
-   }
-   */
    DifferentialIndex deleted(db);
    
    ifstream in2(argv[4]);

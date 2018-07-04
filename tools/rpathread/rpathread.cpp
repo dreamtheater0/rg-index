@@ -26,7 +26,7 @@ int main(int argc,char* argv[])
    // Open the rpath filter 
    MemoryMappedFile file;
    char filename[256];
-   unsigned maxL, start, indexRoot;
+   unsigned start, indexRoot;
 
    start = (unsigned) atoi(argv[2]);
    indexRoot = (unsigned) atoi(argv[3]);
