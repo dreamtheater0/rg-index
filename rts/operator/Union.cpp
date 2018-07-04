@@ -107,3 +107,8 @@ void Union::getAsyncInputCandidates(Scheduler& scheduler)
       parts[index]->getAsyncInputCandidates(scheduler);
 }
 //---------------------------------------------------------------------------
+void Union::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

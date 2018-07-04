@@ -20,10 +20,15 @@
 #include "rts/operator/Union.hpp"
 #include "rts/runtime/Runtime.hpp"
 #include "rts/runtime/DifferentialIndex.hpp"
+#include "rts/operator/RFLT.hpp"
+#include "rts/operator/RFLT_M.hpp"
+#include "rpath/RPathTreeIndex.hpp"
+#include <stdlib.h>
 #include <cstdlib>
 #include <map>
 #include <set>
 #include <cassert>
+#include <algorithm>
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -156,6 +161,7 @@ static void collectVariables(const map<unsigned,Register*>& context,set<unsigned
          break;
       case Plan::HashGroupify:
       case Plan::Filter:
+      case Plan::RFLT:
          collectVariables(context,variables,plan->left);
          break;
       case Plan::TableFunction: {
@@ -165,6 +171,11 @@ static void collectVariables(const map<unsigned,Register*>& context,set<unsigned
          collectVariables(context,variables,plan->left);
          break;
       }
+       case Plan::RFLT_M:
+          for (std::vector<Plan*>::const_iterator iter=plan->inputPlans.begin(),
+               limit=plan->inputPlans.end(); iter!=limit;++iter) 
+             collectVariables(context,variables,(*iter));
+          break;
       case Plan::Singleton:
          break;
    }
@@ -592,6 +603,134 @@ static Operator* translateTableFunction(Runtime& runtime,const map<unsigned,Regi
    return result;
 }
 //---------------------------------------------------------------------------
+static Operator* translateRFLT(Runtime& runtime,const map<unsigned,Register*>& context,const set<unsigned>& projection,map<unsigned,Register*>& bindings,const map<const QueryGraph::Node*,unsigned>& registers,Plan* plan)
+   // Translate a filter into an operator tree
+{
+   vector<RGindex::Node*>* fltInfos=&plan->rgindexNodes;
+
+   // Build the input trees
+   Operator* tree=translatePlan(runtime,context,projection,bindings,registers,plan->left);
+
+   if (fltInfos->size() == 0)
+      return tree;
+
+   // Build the operator
+   Register* reg=bindings[plan->ordering];
+   for(unsigned i=0,limit=fltInfos->size();i<limit;i++) {
+      RGindex::Node *fltInfo=(*fltInfos)[i];
+      unsigned vID=plan->nodeIds[i];
+      if (fltInfo->segments[vID])
+         continue;
+      fltInfo->segments[vID] = new RPathSegment(&runtime.getDatabase().rgindex->file, 
+            fltInfo->offsets[vID], fltInfo->offsets[vID]+fltInfo->blks[vID],
+            fltInfo->blks[vID]);
+   }
+   Operator* result=new RFLT(tree, fltInfos, plan->nodeIds, plan->dfscodes,
+                             reg,plan->cardinality); //TODO
+
+   return result;
+}
+//---------------------------------------------------------------------------
+static bool comparePlanCardinality(Plan *plan1, Plan *plan2) {
+   return plan1->cardinality < plan2->cardinality;
+}
+//---------------------------------------------------------------------------
+static Operator* translateRFLT_M(Runtime& runtime,const map<unsigned,Register*>& context,const set<unsigned>& projection,map<unsigned,Register*>& bindings,const map<const QueryGraph::Node*,unsigned>& registers,Plan* plan)
+   // Translate a merge join into an operator tree
+{
+   // Get the join variables (if any)
+   set<unsigned> newProjection=projection;
+   unsigned joinOn=plan->opArg;
+   newProjection.insert(joinOn);
+
+   // Sort the child opeators by their expected cardinalities
+   sort(plan->inputPlans.begin(), plan->inputPlans.end(), comparePlanCardinality);
+
+   // Build the input trees
+   vector<RGindex::Node*>* fltInfos=&plan->rgindexNodes;
+   for(unsigned i=0,limit=fltInfos->size();i<limit;i++) {
+      RGindex::Node *fltInfo=(*fltInfos)[i];
+      unsigned vID=plan->nodeIds[i];
+      if (fltInfo->segments[vID])
+         continue;
+      fltInfo->segments[vID] = new RPathSegment(&runtime.getDatabase().rgindex->file, 
+            fltInfo->offsets[vID], fltInfo->offsets[vID]+fltInfo->blks[vID],
+            fltInfo->blks[vID]);
+   }
+   assert(plan->ppaths.size()==plan->rpathIdxNodes.size());
+   Operator *result = new RFLT_M(&plan->rgindexNodes, plan->nodeIds, 
+                                 plan->dfscodes, plan->cardinality);
+   RFLT_M *rflt_m = (RFLT_M*) result;
+
+   Selection::Predicate* predicate=NULL;
+   for (vector<Plan*>::const_iterator iter=plan->inputPlans.begin(),limit=plan->inputPlans.end();
+         iter!=limit;++iter) {
+      map<unsigned,Register*> tempBindings;
+      vector<Register*> *tail=new vector<Register*>;
+      Operator* input=translatePlan(runtime,context,newProjection,tempBindings,registers,(*iter));
+      // merge bindings & prepare tail
+      for (map<unsigned,Register*>::const_iterator iter2=tempBindings.begin(),limit=tempBindings.end();
+            iter2!=limit;++iter2) {
+         if (projection.count((*iter2).first))
+            bindings[(*iter2).first]=(*iter2).second;
+         if ((*iter2).first!=joinOn)
+            tail->push_back((*iter2).second);
+      }
+      assert(tempBindings[joinOn]);
+      rflt_m->addChild(input,tempBindings[joinOn],tail); 
+
+      Plan *left = (*iter);
+      set<unsigned> leftVariables;
+      collectVariables(context,leftVariables,left);
+      for (vector<Plan*>::const_iterator iter2=iter+1,limit2=plan->inputPlans.end();
+           iter2!=limit2;++iter2) {
+         Plan *right=*iter2;
+         set<unsigned> rightVariables;
+         collectVariables(context,rightVariables,right);
+         map<unsigned,Register*> tempBindings2;
+         // do not comment out this!!
+         Operator* input=translatePlan(runtime,context,newProjection,tempBindings2,registers,(*iter2));
+
+         // Find common ones
+         if (leftVariables.size()<rightVariables.size()) {
+            for (set<unsigned>::const_iterator iter3=leftVariables.begin(),limit=leftVariables.end();iter3!=limit;++iter3)
+               if ((*iter3)!=joinOn) {
+                  if (rightVariables.count(*iter3)) {
+                     assert(tempBindings[*iter3]!=NULL);
+                     assert(tempBindings2[*iter3]!=NULL);
+                     Selection::Predicate* p=new Selection::Equal(
+                           new Selection::Variable(tempBindings[*iter3]),
+                           new Selection::Variable(tempBindings2[*iter3]));
+                     if (predicate)
+                        predicate=new Selection::And(predicate,p); else
+                           predicate=p;
+                  }
+               }
+         } else {
+            for (set<unsigned>::const_iterator iter3=rightVariables.begin(),limit=rightVariables.end();iter3!=limit;++iter3)
+               if ((*iter3)!=joinOn) {
+                  if (leftVariables.count(*iter3)) {
+                     assert(tempBindings[*iter3]!=NULL);
+                     assert(tempBindings2[*iter3]!=NULL);
+                     Selection::Predicate* p=new Selection::Equal(
+                        new Selection::Variable(tempBindings[*iter3]),
+                        new Selection::Variable(tempBindings2[*iter3]));
+                     if (predicate)
+                        predicate=new Selection::And(predicate,p); else
+                           predicate=p;
+                  }
+               }
+         }
+      }
+   }
+
+   // And apply additional selections if necessary
+   if (predicate) {
+      return new Selection(result,runtime,predicate,result->getExpectedOutputCardinality());
+   }
+   return result;
+}
+//---------------------------------------------------------------------------
 static Operator* translatePlan(Runtime& runtime,const map<unsigned,Register*>& context,const set<unsigned>& projection,map<unsigned,Register*>& bindings,const map<const QueryGraph::Node*,unsigned>& registers,Plan* plan)
    // Translate a plan into an operator tree
 {
@@ -609,6 +748,8 @@ static Operator* translatePlan(Runtime& runtime,const map<unsigned,Register*>& c
       case Plan::MergeUnion: result=translateMergeUnion(runtime,context,projection,bindings,registers,plan); break;
       case Plan::TableFunction: result=translateTableFunction(runtime,context,projection,bindings,registers,plan); break;
       case Plan::Singleton: result=new SingletonScan(); break;
+      case Plan::RFLT: return translateRFLT(runtime,context,projection,bindings,registers,plan);
+      case Plan::RFLT_M: return translateRFLT_M(runtime,context,projection,bindings,registers,plan);
    }
    return result;
 }
@@ -653,6 +794,7 @@ Operator* CodeGen::translateIntern(Runtime& runtime,const QueryGraph& query,Plan
    runtime.allocateRegisters(unboundVariable+1);
 
    // Prepare domain information for join attributes
+   if (!getenv("NOSIP"))
    {
       // Count the required number of domains
       unsigned domainCount=0;
@@ -747,4 +889,4 @@ void CodeGen::collectVariables(set<unsigned>& variables,Plan* plan)
 {
    ::collectVariables(map<unsigned,Register*>(),variables,plan);
 }
-//---------------------------------------------------------------------------
+ //---------------------------------------------------------------------------

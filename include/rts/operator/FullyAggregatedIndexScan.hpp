@@ -77,6 +77,7 @@ class FullyAggregatedIndexScan : public Operator
 
    /// Create a suitable operator
    static FullyAggregatedIndexScan* create(Database& db,Database::DataOrder order,Register* subjectRegister,bool subjectBound,Register* predicateRegister,bool predicateBound,Register* objectRegister,bool objectBound,double expectedOutputCardinality);
+   void getStat(unsigned &,unsigned &);
 };
 //---------------------------------------------------------------------------
 #endif

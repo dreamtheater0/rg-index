@@ -59,6 +59,9 @@ void HashJoin::BuildHashTable::run()
          e=join.hashTable[slot2];
       if (e&&(e->key==leftKey)) {
          unsigned ofs=(e==join.hashTable[slot1])?slot1:slot2;
+
+         /* very time consumming -kisung */
+         /*
          bool match=false;
          for (Entry* iter=e;iter;iter=iter->next)
             if (leftKey==iter->key) {
@@ -77,6 +80,7 @@ void HashJoin::BuildHashTable::run()
             }
          if (match)
             continue;
+            */
 
          // Append to the current bucket
          e=join.entryPool.alloc();
@@ -241,5 +245,12 @@ void HashJoin::getAsyncInputCandidates(Scheduler& scheduler)
    unsigned p2=scheduler.getRegisteredPoints();
    right->getAsyncInputCandidates(scheduler);
    scheduler.registerAsyncPoint(probePeekTask,1,probePriority,p2);
+}
+//---------------------------------------------------------------------------
+void HashJoin::getStat(unsigned &final,unsigned &intermediate)
+{
+   intermediate += observedOutputCardinality;
+   left->getStat(final, intermediate);
+   right->getStat(final, intermediate);
 }
 //---------------------------------------------------------------------------

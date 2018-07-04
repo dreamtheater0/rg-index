@@ -8,6 +8,10 @@
 #include <set>
 #include <cassert>
 #include <cstdlib>
+#include <iostream>
+#include <cstdlib>
+#include <fstream>
+using namespace std;
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x

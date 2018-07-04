@@ -51,3 +51,8 @@ void SingletonScan::getAsyncInputCandidates(Scheduler& /*scheduler*/)
 {
 }
 //---------------------------------------------------------------------------
+void SingletonScan::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

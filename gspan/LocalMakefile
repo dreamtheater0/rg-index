@@ -1,0 +1,4 @@
+src_gspan:=          \
+	gspan/dfs.cpp           \
+	gspan/graph.cpp         \
+	gspan/util.cpp

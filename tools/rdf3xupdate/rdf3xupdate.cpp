@@ -3,7 +3,6 @@
 #include "rts/runtime/BulkOperation.hpp"
 #include <iostream>
 #include <fstream>
-#include <string.h>
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2009 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -22,7 +21,7 @@ bool smallAddressSpace()
    return sizeof(void*)<8;
 }
 //---------------------------------------------------------------------------
-static void importStream(DifferentialIndex& diff,istream& in, bool deleted)
+static void importStream(DifferentialIndex& diff,istream& in)
    // Import new triples from an input stream
 {
    BulkOperation bulk(diff);
@@ -34,9 +33,6 @@ static void importStream(DifferentialIndex& diff,istream& in, bool deleted)
          break;
       bulk.insert(subject,predicate,object,objectType,objectSubType);
    }
-   if (deleted)
-	   bulk.markDeleted();
-
    bulk.commit();
 }
 //---------------------------------------------------------------------------
@@ -52,7 +48,7 @@ int main(int argc,char* argv[])
 
    // Check the arguments
    if (argc<2) {
-      cerr << "usage: " << argv[0] << " <database> [delete] <input>" << endl
+      cerr << "usage: " << argv[0] << " <database> <input>" << endl
            << "without input file data is read from stdin" << endl;
       return 1;
    }
@@ -66,24 +62,16 @@ int main(int argc,char* argv[])
 
    // And incorporate changes
    DifferentialIndex diff(db);
-   if (argc==2 || (argc==3&&strcmp(argv[2],"delete")==0)) {
-	   if (strcmp(argv[2],"delete")==0)
-          importStream(diff,cin,true);
-	   else
-          importStream(diff,cin,false);
+   if (argc==2) {
+      importStream(diff,cin);
    } else {
-	  unsigned int indexStart=strcmp(argv[2],"delete")==0?3:2;
-      for (int index=indexStart;index<argc;index++) {
+      for (int index=2;index<argc;index++) {
          ifstream in(argv[index]);
          if (!in.is_open()) {
             cerr << "unable top open " << argv[index] << endl;
             return 1;
          }
-  	   if (strcmp(argv[2],"delete")==0)
-          importStream(diff,in,true);
-  	   else
-          importStream(diff,in,false);
-
+         importStream(diff,in);
       }
    }
    diff.sync();

@@ -1,0 +1,17 @@
+src_tools_rpathbuild:=			      \
+	tools/rpathbuild/Sorter.cpp      \
+	tools/rpathbuild/TempFile.cpp
+
+
+src_tools_rpathbuild_exe:=			   \
+	tools/rpathbuild/rpathbuild.cpp
+
+src_tools_rpathbuild2_exe:=		   \
+	tools/rpathbuild/rpathbuild2.cpp
+
+$(PREFIX)rpathbuild$(EXEEXT): $(addprefix $(PREFIX),$(src_tools_rpathbuild_exe:.cpp=$(OBJEXT)) $(src_gspan:.cpp=$(OBJEXT)) $(src_rgindex:.cpp=$(OBJEXT)) $(src_tools_rpathbuild:.cpp=$(OBJEXT)) $(src_infra:.cpp=$(OBJEXT)) $(src_rpath:.cpp=$(OBJEXT)) $(src_cts:.cpp=$(OBJEXT)) $(src_rts:.cpp=$(OBJEXT)))
+	$(buildexe)
+
+$(PREFIX)rpathbuild2$(EXEEXT): $(addprefix $(PREFIX),$(src_tools_rpathbuild2_exe:.cpp=$(OBJEXT)) $(src_gspan:.cpp=$(OBJEXT)) $(src_rgindex:.cpp=$(OBJEXT)) $(src_tools_rpathbuild:.cpp=$(OBJEXT)) $(src_infra:.cpp=$(OBJEXT)) $(src_rpath:.cpp=$(OBJEXT)) $(src_cts:.cpp=$(OBJEXT)) $(src_rts:.cpp=$(OBJEXT)))
+	$(buildexe)
+

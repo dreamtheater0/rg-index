@@ -6,14 +6,7 @@
 #include <sstream>
 #include <cassert>
 #include <cstdlib>
-#ifdef __GNUC__
-#if (__GNUC__>4)||((__GNUC__==4)&&(__GNUC_MINOR__>=9))
-#define CONFIG_TR1
-#endif
-#endif
-#ifdef CONFIG_TR1
-#include <tr1/regex>
-#endif
+
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -723,7 +716,7 @@ void Selection::BuiltinRegEx::setSelection(Selection* s)
 void Selection::BuiltinRegEx::eval(Result& result)
    // Evaluate the predicate
 {
-/*#ifdef CONFIG_TR1
+#ifdef CONFIG_TR1
    Result text,pattern;
    arg1->eval(text);
    arg2->eval(pattern);
@@ -737,9 +730,9 @@ void Selection::BuiltinRegEx::eval(Result& result)
    } catch (const std::tr1::regex_error&) {
       result.setBoolean(false);
    }
-#else */
+#else
    result.setBoolean(false);
-//#endif
+#endif
 }
 //---------------------------------------------------------------------------
 string Selection::BuiltinRegEx::print(PlanPrinter& out)
@@ -870,3 +863,7 @@ void Selection::getAsyncInputCandidates(Scheduler& scheduler)
    input->getAsyncInputCandidates(scheduler);
 }
 //---------------------------------------------------------------------------
+void Selection::getStat(unsigned &final,unsigned &intermediate)
+{
+   input->getStat(final, intermediate);
+}

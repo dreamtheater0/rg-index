@@ -7,6 +7,8 @@
 #include "rts/segment/DictionarySegment.hpp"
 #include "rts/segment/FactsSegment.hpp"
 #include "rts/runtime/Runtime.hpp"
+#include "rpath/RPathTreeIndex.hpp"
+#include <stdlib.h>
 #include <iostream>
 //---------------------------------------------------------------------------
 // RDF-3X
@@ -69,6 +71,7 @@ class DifferentialIndexScan : public Operator
    void addMergeHint(Register* reg1,Register* reg2);
    /// Register parts of the tree that can be executed asynchronous
    void getAsyncInputCandidates(Scheduler& scheduler);
+   void getStat(unsigned &,unsigned &);
 };
 //---------------------------------------------------------------------------
 DifferentialIndexScan::DifferentialIndexScan(Operator* input,Latch& latch,unsigned timestamp,set<DifferentialIndex::VersionedTriple>& triples,Register* value1,Register* value2,Register* value3,unsigned check2,unsigned check3,const DifferentialIndex::VersionedTriple& lowerBound,const DifferentialIndex::VersionedTriple& upperBound)
@@ -349,6 +352,7 @@ class AggregatedDifferentialIndexScan : public Operator
    void addMergeHint(Register* reg1,Register* reg2);
    /// Register parts of the tree that can be executed asynchronous
    void getAsyncInputCandidates(Scheduler& scheduler);
+   void getStat(unsigned &,unsigned &);
 };
 //---------------------------------------------------------------------------
 AggregatedDifferentialIndexScan::AggregatedDifferentialIndexScan(Operator* input,Latch& latch,unsigned timestamp,set<DifferentialIndex::VersionedTriple>& triples,Register* value1,Register* value2,unsigned check2,const DifferentialIndex::VersionedTriple& lowerBound,const DifferentialIndex::VersionedTriple& upperBound)
@@ -625,6 +629,7 @@ class FullyAggregatedDifferentialIndexScan : public Operator
    void addMergeHint(Register* reg1,Register* reg2);
    /// Register parts of the tree that can be executed asynchronous
    void getAsyncInputCandidates(Scheduler& scheduler);
+   void getStat(unsigned &,unsigned &);
 };
 //---------------------------------------------------------------------------
 FullyAggregatedDifferentialIndexScan::FullyAggregatedDifferentialIndexScan(Operator* input,Latch& latch,unsigned timestamp,set<DifferentialIndex::VersionedTriple>& triples,Register* value1,const DifferentialIndex::VersionedTriple& lowerBound,const DifferentialIndex::VersionedTriple& upperBound)
@@ -855,44 +860,41 @@ DifferentialIndex::~DifferentialIndex()
 {
 }
 //---------------------------------------------------------------------------
-void DifferentialIndex::load(const vector<Triple>& mewTriples, bool deleteMarker)
+void DifferentialIndex::load(const vector<Triple>& mewTriples)
    // Load new triples
 {
-   static const unsigned created = deleteMarker? ~0u:0u;
-   static const unsigned deleted = deleteMarker? 0u:~0u;
+   static const unsigned created = 0;
 
    // SPO
    latches[0].lockExclusive();
-   for (vector<Triple>::const_iterator iter=mewTriples.begin(),limit=mewTriples.end();iter!=limit;++iter){
-      triples[0].insert(VersionedTriple((*iter).subject,(*iter).predicate,(*iter).object,created,deleted));
-   }
+   for (vector<Triple>::const_iterator iter=mewTriples.begin(),limit=mewTriples.end();iter!=limit;++iter)
+      triples[0].insert(VersionedTriple((*iter).subject,(*iter).predicate,(*iter).object,created,~0u));
    latches[0].unlock();
    // SOP
    latches[1].lockExclusive();
    for (vector<Triple>::const_iterator iter=mewTriples.begin(),limit=mewTriples.end();iter!=limit;++iter)
-      triples[1].insert(VersionedTriple((*iter).subject,(*iter).object,(*iter).predicate,created,deleted));
+      triples[1].insert(VersionedTriple((*iter).subject,(*iter).object,(*iter).predicate,created,~0u));
    latches[1].unlock();
-   // OPS
+   // OSP
    latches[2].lockExclusive();
    for (vector<Triple>::const_iterator iter=mewTriples.begin(),limit=mewTriples.end();iter!=limit;++iter)
-      triples[2].insert(VersionedTriple((*iter).object,(*iter).predicate,(*iter).subject,created,deleted));
+      triples[2].insert(VersionedTriple((*iter).object,(*iter).subject,(*iter).predicate,created,~0u));
    latches[2].unlock();
-   // OSP
+   // OPS
    latches[3].lockExclusive();
    for (vector<Triple>::const_iterator iter=mewTriples.begin(),limit=mewTriples.end();iter!=limit;++iter)
-      triples[3].insert(VersionedTriple((*iter).object,(*iter).subject,(*iter).predicate,created,deleted));
+      triples[3].insert(VersionedTriple((*iter).object,(*iter).predicate,(*iter).subject,created,~0u));
    latches[3].unlock();
    // PSO
    latches[4].lockExclusive();
    for (vector<Triple>::const_iterator iter=mewTriples.begin(),limit=mewTriples.end();iter!=limit;++iter)
-      triples[4].insert(VersionedTriple((*iter).predicate,(*iter).subject,(*iter).object,created,deleted));
+      triples[4].insert(VersionedTriple((*iter).predicate,(*iter).subject,(*iter).object,created,~0u));
    latches[4].unlock();
    // POS
    latches[5].lockExclusive();
    for (vector<Triple>::const_iterator iter=mewTriples.begin(),limit=mewTriples.end();iter!=limit;++iter)
-      triples[5].insert(VersionedTriple((*iter).predicate,(*iter).object,(*iter).subject,created,deleted));
+      triples[5].insert(VersionedTriple((*iter).predicate,(*iter).object,(*iter).subject,created,~0u));
    latches[5].unlock();
-
 }
 //---------------------------------------------------------------------------
 void DifferentialIndex::mapLiterals(const std::vector<Literal>& literals,std::vector<unsigned>& ids)
@@ -984,6 +986,7 @@ bool TriplesLoader::next(unsigned& value1,unsigned& value2,unsigned& value3,unsi
    created=(*iter).created;
    deleted=(*iter).deleted;
    ++iter;
+
    return true;
 }
 //---------------------------------------------------------------------------
@@ -1116,6 +1119,7 @@ void DifferentialIndex::sync()
          FullyAggregatedTriplesLoader loader(triples[index].begin(),triples[index].end());
          db.getFullyAggregatedFacts(static_cast<Database::DataOrder>(index)).update(loader);
       }
+
       triples[index].clear();
    }
 
@@ -1364,5 +1368,86 @@ bool DifferentialIndex::lookupById(unsigned id,const char*& start,const char*& s
 
    // Lookup in the main dictionary
    return dict.lookupById(id,start,stop,type,subType);
+}
+//---------------------------------------------------------------------------
+void DifferentialIndex::getRPathUpdateInfo(RPathUpdateInfo& updateInfo)
+{
+   struct Triple_s tp;
+   unsigned inserted, deleted, count;
+
+   map<unsigned, vector<struct Triple_s> *>::iterator iter;
+   cout << "load facts. pso" << endl;
+   TriplesLoader facts_pso = TriplesLoader(
+         triples[Database::Order_Predicate_Subject_Object].begin(),
+         triples[Database::Order_Predicate_Subject_Object].end());
+   while (facts_pso.next(tp.p, tp.s, tp.o, inserted, deleted)) {
+      vector<struct Triple_s>* triples;
+      iter = updateInfo.triples_pso.find(tp.p);
+      if (iter==updateInfo.triples_pso.end()) {
+         triples = new vector<struct Triple_s>;
+         updateInfo.triples_pso.insert(pair<unsigned, vector<struct Triple_s>*>(tp.p, triples));
+      }
+      else triples = (*iter).second;
+      triples->push_back(tp);
+   }
+
+   cout << "load facts. pos" << endl;
+   TriplesLoader facts_pos = TriplesLoader(
+         triples[Database::Order_Predicate_Object_Subject].begin(),
+         triples[Database::Order_Predicate_Object_Subject].end());
+   while (facts_pos.next(tp.p, tp.o, tp.s, inserted, deleted)) {
+      vector<struct Triple_s>* triples;
+      iter = updateInfo.triples_pos.find(tp.p);
+      if (iter==updateInfo.triples_pos.end()) {
+         triples = new vector<struct Triple_s>;
+         updateInfo.triples_pos.insert(pair<unsigned, vector<struct Triple_s>*>(tp.p, triples));
+      }
+      else triples = (*iter).second;
+      triples->push_back(tp);
+   }
+
+   cout << "load facts. s" << endl;
+   FullyAggregatedTriplesLoader fullyaggr_s = FullyAggregatedTriplesLoader(
+         triples[Database::Order_Subject_Object_Predicate].begin(),
+         triples[Database::Order_Subject_Object_Predicate].end());
+   while (fullyaggr_s.next(tp.s, count)) {
+      updateInfo.subjs.push_back(tp.s);
+   }
+
+   cout << "load facts. o" << endl;
+   FullyAggregatedTriplesLoader fullyaggr_o = FullyAggregatedTriplesLoader (
+         triples[Database::Order_Object_Subject_Predicate].begin(),
+         triples[Database::Order_Object_Subject_Predicate].end());
+   while (fullyaggr_o.next(tp.o, count)) {
+      updateInfo.objs.push_back(tp.o);
+   }
+
+   cout << "load facts. p" << endl;
+   unsigned MAXP=0;
+   if (getenv("MAXP")) {
+      MAXP=atoi(getenv("MAXP"));
+   }
+   FullyAggregatedTriplesLoader fullyaggr_p = FullyAggregatedTriplesLoader (
+         triples[Database::Order_Predicate_Subject_Object].begin(),
+         triples[Database::Order_Predicate_Subject_Object].end());
+   while (fullyaggr_p.next(tp.p, count)) {
+      if (MAXP == 0 || tp.p < MAXP)
+         updateInfo.preds.insert(tp.p);
+   }
+} 
+//---------------------------------------------------------------------------
+void AggregatedDifferentialIndexScan::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------
+void DifferentialIndexScan::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------
+void FullyAggregatedDifferentialIndexScan::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
 }
 //---------------------------------------------------------------------------

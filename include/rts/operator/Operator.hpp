@@ -18,13 +18,12 @@ class PlanPrinter;
 /// Base class for all operators of the runtime system
 class Operator
 {
-   protected:
+   public:
    /// Tuple counter
    double expectedOutputCardinality;
    /// Tuple counter
    unsigned observedOutputCardinality;
 
-   public:
    /// Constructor
    explicit Operator(double expectedOutputCardinality);
    /// Destructor
@@ -49,6 +48,10 @@ class Operator
 
    /// Disable scan skipping. Debugging only, this is a global property!
    static bool disableSkipping;
+
+   virtual void getStat(unsigned &final,unsigned &intermediate) = 0;
+
+   static unsigned triplecnt;
 };
 //---------------------------------------------------------------------------
 #endif

@@ -14,6 +14,7 @@
 #include "cts/infra/BitSet.hpp"
 #include "cts/infra/QueryGraph.hpp"
 #include "rts/database/Database.hpp"
+#include "gspan/graph.hpp"
 //---------------------------------------------------------------------------
 /// A plan generator that construct a physical plan from a query graph
 class PlanGen
@@ -43,7 +44,7 @@ class PlanGen
    void operator=(const PlanGen&);
 
    /// Add a plan to a subproblem
-   void addPlan(Problem* problem,Plan* plan);
+   bool addPlan(Problem* problem,Plan* plan);
    /// Generate an index scan
    void buildIndexScan(const QueryGraph::SubQuery& query,Database::DataOrder order,Problem* problem,unsigned value1,unsigned value1C,unsigned value2,unsigned value2C,unsigned value3,unsigned value3C);
    /// Generate an aggregated index scan
@@ -60,6 +61,16 @@ class PlanGen
    Problem* buildUnion(const std::vector<QueryGraph::SubQuery>& query,unsigned id);
    /// Generate a table function access
    Problem* buildTableFunction(const QueryGraph::TableFunction& function,unsigned id);
+   /// Generate a RFLT
+   Plan* buildRFLT(Problem* result,PlanContainer& plans,Plan* plan, unsigned predicate, bool subject);
+   void buildRFLT_M(Problem* result,PlanContainer& plans,unsigned joinOrdering,Plan* left, Plan *right, double selectivity);
+   bool getRPathFLTSelectivityCosts(std::vector<RPathTreeIndex::Node*>& rflts, unsigned predicate,
+                                    bool subject, double &selectivity, double &costs);
+   Plan* addRPFLTbyHeuristic(Plan *plan);
+   Plan* buildRFLT_RGINDEX(Problem* /*result*/,PlanContainer& plans, Plan* plan, unsigned predicate, bool subject);
+   void buildRFLT_M_RGINDEX(Problem* result,PlanContainer& plans,unsigned joinOrdering,
+                            Plan* left, Plan *right, double joinSelectivity);
+
 
    /// Translate a query into an operator tree
    Plan* translate(const QueryGraph::SubQuery& query);
@@ -71,7 +82,11 @@ class PlanGen
    ~PlanGen();
 
    /// Translate a query into an operator tree
-   Plan* translate(Database& db,const QueryGraph& query);
+   Plan* translate(Database& db,QueryGraph& query);
+
+
+   // RG-index
+   GSPAN::Graph gspan_graph;
 };
 //---------------------------------------------------------------------------
 #endif

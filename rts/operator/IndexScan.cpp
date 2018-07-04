@@ -569,3 +569,8 @@ unsigned IndexScan::ScanPrefix123::next()
    return 1;
 }
 //---------------------------------------------------------------------------
+void IndexScan::getStat(unsigned &/*final*/,unsigned &intermediate)
+{
+   intermediate += observedOutputCardinality;
+}
+//---------------------------------------------------------------------------

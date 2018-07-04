@@ -58,6 +58,8 @@ BufferManager::BufferManager(unsigned bufferSizeHintInBytes)
 BufferManager::~BufferManager()
    // BufferManager
 {
+
+   return;
    // Lock the mutex to synchronize with the writer
 
    // Stop the writer

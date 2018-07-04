@@ -93,3 +93,8 @@ void NestedLoopJoin::getAsyncInputCandidates(Scheduler& scheduler)
    right->getAsyncInputCandidates(scheduler);
 }
 //---------------------------------------------------------------------------
+void NestedLoopJoin::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

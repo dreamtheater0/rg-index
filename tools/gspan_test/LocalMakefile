@@ -1,0 +1,7 @@
+src_tools_gspan_test:=  \
+	tools/gspan_test/test.cpp
+
+
+$(PREFIX)gspan_test$(EXEEXT): $(addprefix $(PREFIX),$(src_tools_gspan_test:.cpp=$(OBJEXT)) $(src_gspan:.cpp=$(OBJEXT)))
+	$(buildexe)
+

@@ -11,12 +11,17 @@
 // San Francisco, California, 94105, USA.
 //---------------------------------------------------------------------------
 #include "infra/util/Pool.hpp"
+#include "rpath/PPath.hpp"
+#include "rpath/RPathTreeIndex.hpp"
+#include "rg-index/rg-index.hpp"
+#include "gspan/dfs.hpp"
+#include <vector>
 //---------------------------------------------------------------------------
 /// A plan fragment
 struct Plan
 {
    /// Possible operators
-   enum Op { IndexScan, AggregatedIndexScan, FullyAggregatedIndexScan, NestedLoopJoin, MergeJoin, HashJoin, HashGroupify, Filter, Union, MergeUnion, TableFunction, Singleton };
+   enum Op { IndexScan, AggregatedIndexScan, FullyAggregatedIndexScan, NestedLoopJoin, MergeJoin, HashJoin, HashGroupify, Filter, Union, MergeUnion, TableFunction, Singleton, RFLT, RFLT_M };
    /// The cardinalits type
    typedef double card_t;
    /// The cost type
@@ -40,6 +45,23 @@ struct Plan
 
    /// Print the plan
    void print(unsigned indent) const;
+
+   /// RFLT_M input
+   std::vector<Plan*> inputPlans;
+   double joinkeycnt;
+   std::vector<double> filteredCard;
+   unsigned csetcnt;
+   /// RFLT 
+   std::vector<RPathTreeIndex::Node*> rpathIdxNodes;
+   std::vector<PPath> ppaths;
+   unsigned predicate;
+   card_t original_cardinality;
+   bool subject; // is sortkey the subject?
+
+   /// RFLT_RGINDEX
+   std::vector<RGindex::Node*> rgindexNodes;
+   std::vector<unsigned> nodeIds;
+   std::vector<GSPAN::DFSCode> dfscodes;
 };
 //---------------------------------------------------------------------------
 /// A container for plans. Encapsulates the memory management
@@ -47,7 +69,7 @@ class PlanContainer
 {
    private:
    /// The pool
-   StructPool<Plan> pool;
+   Pool<Plan> pool;
 
    public:
    /// Constructor
@@ -58,7 +80,7 @@ class PlanContainer
    /// Alloca a new plan
    Plan* alloc() { return pool.alloc(); }
    /// Release an allocate plan
-   void free(Plan* p) { pool.free(p); }
+   void free(Plan* p) {p->rpathIdxNodes.clear(); pool.free(p); }
    /// Release all plans
    void clear();
 };

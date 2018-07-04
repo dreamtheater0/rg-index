@@ -96,3 +96,8 @@ void NestedLoopFilter::getAsyncInputCandidates(Scheduler& scheduler)
    input->getAsyncInputCandidates(scheduler);
 }
 //---------------------------------------------------------------------------
+void NestedLoopFilter::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

@@ -4,6 +4,7 @@
 #include "infra/osdep/Latch.hpp"
 #include "rts/database/Database.hpp"
 #include "rts/segment/DictionarySegment.hpp"
+#include "rpath/RPathTreeIndex.hpp"
 #include <map>
 #include <set>
 //---------------------------------------------------------------------------
@@ -83,7 +84,7 @@ class DifferentialIndex
    Database& getDatabase() { return db; }
 
    /// Load new triples
-   void load(const std::vector<Triple>& triples, bool todelete);
+   void load(const std::vector<Triple>& triples);
    /// Map literals to ids
    void mapLiterals(const std::vector<Literal>& literals,std::vector<unsigned>& ids);
 
@@ -105,6 +106,9 @@ class DifferentialIndex
    bool lookup(const std::string& text,::Type::ID type,unsigned subType,unsigned& id);
    /// Lookup a string for a given id
    bool lookupById(unsigned id,const char*& start,const char*& stop,::Type::ID& type,unsigned& subType);
+
+   /// RP-index
+   void getRPathUpdateInfo(RPathUpdateInfo& updateInfo);
 };
 //---------------------------------------------------------------------------
 #endif

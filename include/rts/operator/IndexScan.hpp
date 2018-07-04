@@ -83,6 +83,7 @@ class IndexScan : public Operator
 
    /// Create a suitable operator
    static IndexScan* create(Database& db,Database::DataOrder order,Register* subjectRegister,bool subjectBound,Register* predicateRegister,bool predicateBound,Register* objectRegister,bool objectBound,double expectedOutputCardinality);
+   void getStat(unsigned &final,unsigned &intermediate);
 };
 //---------------------------------------------------------------------------
 #endif

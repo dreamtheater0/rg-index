@@ -1,0 +1,6 @@
+src_rgindex:=                       \
+	rg-index/rg-index.cpp				\
+	rg-index/inter_result.cpp		   \
+	rg-index/inter_result_tuple.cpp  \
+
+ 

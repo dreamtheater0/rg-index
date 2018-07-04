@@ -308,3 +308,8 @@ void TableFunction::getAsyncInputCandidates(Scheduler& scheduler)
    input->getAsyncInputCandidates(scheduler);
 }
 //---------------------------------------------------------------------------
+void TableFunction::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

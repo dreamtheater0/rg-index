@@ -164,3 +164,8 @@ void HashGroupify::getAsyncInputCandidates(Scheduler& scheduler)
    input->getAsyncInputCandidates(scheduler);
 }
 //---------------------------------------------------------------------------
+void HashGroupify::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

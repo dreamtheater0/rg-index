@@ -38,7 +38,7 @@ endif
 
 ifeq ($(FORCELIBS),)
 
-LIBS:=-lpthread
+LIBS:=-lpthread -lstdc++ -lglog
 
 ifeq ($(SYS),SunOS)
 LIBS:=$(LIBS) -lsocket -lnsl

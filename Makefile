@@ -9,11 +9,14 @@ PREFIX:=bin/
 
 #############################################################################
 # Default target
-all: $(PREFIX)rdf3xdump$(EXEEXT) $(PREFIX)rdf3xload$(EXEEXT) $(PREFIX)rdf3xquery$(EXEEXT) $(PREFIX)rdf3xupdate$(EXEEXT) $(PREFIX)rdf3xembedded$(EXEEXT) $(PREFIX)rdf3xreorg$(EXEEXT)
+all: $(PREFIX)rdf3xdump$(EXEEXT) $(PREFIX)rdf3xload$(EXEEXT) $(PREFIX)rdf3xquery$(EXEEXT) $(PREFIX)rdf3xupdate$(EXEEXT) $(PREFIX)rdf3xembedded$(EXEEXT) $(PREFIX)rdf3xreorg$(EXEEXT) $(PREFIX)rpathbuild2$(EXEEXT) $(PREFIX)rpathupdate$(EXEEXT) $(PREFIX)divider$(EXEEXT) $(PREFIX)evalsparql$(EXEEXT) $(PREFIX)rpathbuild$(EXEEXT) $(PREFIX)rpathread$(EXEEXT) $(PREFIX)rpathstatbuild$(EXEEXT) $(PREFIX)csbuild$(EXEEXT) $(PREFIX)build_rg-index$(EXEEXT) $(PREFIX)gspan_test$(EXEEXT)
 
 #############################################################################
 # Collect all sources
 
+include gspan/LocalMakefile
+include rpath/LocalMakefile
+include rg-index/LocalMakefile
 include cts/LocalMakefile
 include infra/LocalMakefile
 include makeutil/LocalMakefile
@@ -29,7 +32,7 @@ endif
 include tools/LocalMakefile
 
 
-source:=$(src_cts) $(src_infra) $(src_rts) $(src_tools) $(src_lineeditor)
+source:=$(src_rpath) $(src_cts) $(src_infra) $(src_rts) $(src_tools) $(src_lineeditor)
 
 #############################################################################
 # Dependencies

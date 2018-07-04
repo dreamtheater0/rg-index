@@ -1,4 +1,6 @@
 #include "cts/infra/QueryGraph.hpp"
+#include "rpath/RPathQueryGraph.hpp"
+#include <iostream>
 #include <set>
 //---------------------------------------------------------------------------
 // RDF-3X
@@ -222,5 +224,14 @@ void QueryGraph::constructEdges()
 {
    set<unsigned> bindings;
    ::constructEdges(query,bindings);
+}
+//---------------------------------------------------------------------------
+void QueryGraph::print()
+{
+   std::vector<Node> *nodesArray = &query.nodes;
+   for(unsigned i=0,limit=nodesArray->size();i<limit;i++) { 
+      Node n = (*nodesArray)[i];
+      cout << "<" << n.subject << "," << n.predicate << "," << n.object << ">" << endl;
+   }
 }
 //---------------------------------------------------------------------------

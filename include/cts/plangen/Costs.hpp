@@ -11,6 +11,8 @@
 // San Francisco, California, 94105, USA.
 //---------------------------------------------------------------------------
 /// A cost model used by the plan generator
+#include <vector>
+#include <stdlib.h>
 class Costs
 {
    public:
@@ -33,8 +35,20 @@ class Costs
 
    /// Costs for a merge join
    static cost_t mergeJoin(double leftCard,double rightCard) { return (leftCard/cpuSpeed)+(rightCard/cpuSpeed); }
+   static cost_t merge(vector<double> &cards) {
+      double costs=0;
+      for(vector<double>::iterator iter=cards.begin(), limit=cards.end(); iter!=limit;iter++) {
+         costs+=(*iter)/cpuSpeed;
+      }
+      return costs; 
+   }
    /// Costs for a hash join
-   static cost_t hashJoin(double leftCard,double rightCard) { return 300000+(leftCard/10)+(rightCard/100); }
+   static cost_t hashJoin(double leftCard,double rightCard) {
+      if (getenv("LIGHTHASH")) {
+         return 300+(leftCard/10)+(rightCard/100); 
+      }
+      return 300000+(leftCard/10)+(rightCard/100); 
+   }
    /// Costs for a filter
    static cost_t filter(double card) { return card/(cpuSpeed/3); }
    /// Costs for a table function

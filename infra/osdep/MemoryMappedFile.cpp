@@ -73,7 +73,7 @@ bool MemoryMappedFile::open(const char* name)
       size_t size=lseek(file,0,SEEK_END);
       if (!(~size)) { ::close(file); return false; }
       void* mapping=mmap(0,size,PROT_READ,MAP_PRIVATE,file,0);
-      if (!mapping) { ::close(file); return false; }
+      if (mapping==MAP_FAILED) { ::close(file); return false; }
       begin=static_cast<char*>(mapping);
       end=begin+size;
    #endif

@@ -2,7 +2,6 @@
 #include "rts/database/DatabaseBuilder.hpp"
 #include "rts/transaction/LogAction.hpp"
 #include "rts/segment/BTree.hpp"
-#include <stdio.h>
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -69,7 +68,7 @@ class FactsSegment::IndexImplementation
       unsigned value1,value2,value3,created,deleted;
 
       /// Compare
-      bool operator<(const LeafEntry& o) const { return (value1<o.value1)||((value1==o.value1)&&((value2<o.value2)||((value2==o.value2)&&((value3<o.value3)||((value3==o.value3)&&(created<o.created))||((value3==o.value3)&&(deleted<o.deleted)))))); }
+      bool operator<(const LeafEntry& o) const { return (value1<o.value1)||((value1==o.value1)&&((value2<o.value2)||((value2==o.value2)&&((value3<o.value3)||((value3==o.value3)&&(created<o.created)))))); }
       /// Compare
       bool operator<(const InnerKey& o) const { return (value1<o.value1)||((value1==o.value1)&&((value2<o.value2)||((value2==o.value2)&&(value3<o.value3)))); }
    };
@@ -120,7 +119,7 @@ class FactsSegment::IndexImplementation
    /// Store info about the leaf pages
    void updateLeafInfo(unsigned firstLeaf,unsigned leafCount);
 
-   /// Check for duplicates/conflicts and "merge" if required
+   /// Check for duplicates/conflicts and "merge" if equired
    static bool mergeConflictWith(const LeafEntry& newEntry,LeafEntry& oldEntry) { return (newEntry.value1==oldEntry.value1)&&(newEntry.value2==oldEntry.value2)&&(newEntry.value3==oldEntry.value3)&&(!~oldEntry.deleted); }
 
    /// Pack leaf entries
@@ -181,44 +180,18 @@ static unsigned char* writeDelta(unsigned char* writer,unsigned value)
 unsigned FactsSegment::IndexImplementation::packLeafEntries(unsigned char* writer,unsigned char* writerLimit,vector<FactsSegment::IndexImplementation::LeafEntry>::const_iterator entriesStart,vector<FactsSegment::IndexImplementation::LeafEntry>::const_iterator entriesLimit)
    // Pack the facts into leaves using prefix compression
 {
-   unsigned lastValue1,lastValue2,lastValue3,lastDeleted;
-   // we need a copy of deleted values, but we don't want to put them into lastValues because the compression should not be applied for them
-   unsigned lastDeleted1=0, lastDeleted2=0, lastDeleted3=0;
-   //number of deleted first triples
-   unsigned deletedFirstEntry=0;
+   unsigned lastValue1,lastValue2,lastValue3;
    unsigned value1,value2,value3;
-   unsigned created=0u,deleted=~0u,lc=created,ld=deleted;
+   unsigned created=0,deleted=~0u,lc=created,ld=deleted;
+
    // Store the first entry
    if (entriesStart==entriesLimit)
       return 0;
    if ((writer+12)>writerLimit)
       return 0;
-
-   while (entriesStart!=entriesLimit &&~(*entriesStart).deleted){
-	  // printf("deleting the first element!\n");
-	  // printf("first values: %u %u %u, deleted: %u \n",(*entriesStart).value1,(*entriesStart).value2,(*entriesStart).value3,(*entriesStart).deleted);
-	   lastDeleted1=(*entriesStart).value1; lastDeleted2=(*entriesStart).value2; lastDeleted3=(*entriesStart).value3;
-	   entriesStart++;
-	   deletedFirstEntry++;
-
-	   if (entriesStart==entriesLimit)
-	      return deletedFirstEntry;
-	   // do we need to skip one more entry?
-	   if (lastDeleted1==(*(entriesStart)).value1 && lastDeleted2 == (*(entriesStart)).value2 && lastDeleted3==(*(entriesStart)).value3 ){
-		   deletedFirstEntry++;
-		   entriesStart++;
-		   if (entriesStart==entriesLimit){
-		      return deletedFirstEntry;
-		   }
-
-	   }
-   }
-
-
    Segment::writeUint32Aligned(writer,lastValue1=(*entriesStart).value1);
    Segment::writeUint32Aligned(writer+4,lastValue2=(*entriesStart).value2);
    Segment::writeUint32Aligned(writer+8,lastValue3=(*entriesStart).value3);
-   lastDeleted=(*entriesStart).deleted;
    writer+=12;
    if (((*entriesStart).created!=created)||((*entriesStart).deleted!=deleted)) {
       if ((writer+9)>writerLimit)
@@ -234,26 +207,13 @@ unsigned FactsSegment::IndexImplementation::packLeafEntries(unsigned char* write
    for (vector<LeafEntry>::const_iterator iter=entriesStart+1;iter!=entriesLimit;++iter) {
       // Compute the length
       value1=(*iter).value1; value2=(*iter).value2; value3=(*iter).value3;
-      // Delete the triple
-      if (~(*iter).deleted){
-   	     printf("   deleting the tuple!\n");
-         lastDeleted1=value1; lastDeleted2=value2; lastDeleted3=value3; lastDeleted=(*iter).deleted;
-   	     continue;
-      }
-
       unsigned len;
-
-      if (value1==lastDeleted1 && value2 == lastDeleted2 && value3 == lastDeleted3){
-    	  continue;
-      }
-
       if (value1==lastValue1) {
          if (value2==lastValue2) {
             if (value3==lastValue3) {
                // Skipping a duplicate
-               if (((*iter).created==created)&&((*iter).deleted==deleted)){
+               if (((*iter).created==created)&&((*iter).deleted==deleted))
                   continue;
-               }
 
                // Both stamp must change, otherwise we get inconsistent data!
                assert(((*iter).created!=created)&&((*iter).deleted!=deleted));
@@ -367,13 +327,12 @@ unsigned FactsSegment::IndexImplementation::packLeafEntries(unsigned char* write
          writer=writeDelta(writer,value2);
          writer=writeDelta(writer,value3);
       }
-      lastValue1=value1; lastValue2=value2; lastValue3=value3; lastDeleted=(*iter).deleted;
+      lastValue1=value1; lastValue2=value2; lastValue3=value3;
    }
 
    // Done, everything fitted
    memset(writer,0,writerLimit-writer);
-   // consider also those deleted first triples
-   return entriesLimit-entriesStart + deletedFirstEntry;
+   return entriesLimit-entriesStart;
 }
 //---------------------------------------------------------------------------
 static inline unsigned readDelta1(const unsigned char* pos) { return pos[0]; }

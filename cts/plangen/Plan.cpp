@@ -1,4 +1,5 @@
 #include "cts/plangen/Plan.hpp"
+#include "rpath/RPathTreeIndex.hpp"
 #include <iostream>
 //---------------------------------------------------------------------------
 // RDF-3X
@@ -46,8 +47,23 @@ void Plan::print(unsigned indent) const
       case MergeUnion: cout << "MergeUnion"; break;
       case TableFunction: cout << "TableFunction"; break;
       case Singleton: cout << "Singleton"; break;
+      case RFLT: cout << "RFLT"; break;
+      case RFLT_M: cout << "RFLT_M"; 
+         cout << " csetCnt: " << csetcnt;
+         cout << " joinkeyCnt: " << joinkeycnt;
+         cout << " filteredCard: ";
+         for (unsigned i=0; i<filteredCard.size(); i++) {
+            cout << filteredCard[i] << " ";
+         }
+         for (unsigned i=0; i<rpathIdxNodes.size(); i++) {
+            RPathTreeIndex::Node *node = rpathIdxNodes[i];
+            cout << "nodeP: " << node->predicate << " nodeCard: " << node->cardinality << " ";
+         }
+      break;
    }
-   cout << " cardinality=" << cardinality << " costs=" << costs << endl;
+   cout << " cardinality=" << cardinality << " original cardinality=" << original_cardinality << 
+           " costs=" << costs << " ordering=" << ordering << " subject=" << subject << 
+           " predicate=" << predicate << endl;
    switch (op) {
       case IndexScan: break;
       case AggregatedIndexScan: break;
@@ -61,6 +77,12 @@ void Plan::print(unsigned indent) const
       case MergeUnion: left->print(indent+1); right->print(indent+1); break;
       case TableFunction: left->print(indent+1); break;
       case Singleton: break;
+      case RFLT: left->print(indent+1); break;
+      case RFLT_M: 
+         for (std::vector<Plan*>::const_iterator iter=inputPlans.begin(),limit=inputPlans.end();iter!=limit;++iter) {
+            (*iter)->print(indent+1);
+         }
+      break;
    }
 }
 //---------------------------------------------------------------------------

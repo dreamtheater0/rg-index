@@ -10,6 +10,7 @@
 // San Francisco, California, 94105, USA.
 //---------------------------------------------------------------------------
 bool Operator::disableSkipping = false;
+unsigned Operator::triplecnt = 0;
 //---------------------------------------------------------------------------
 Operator::Operator(double expectedOutputCardinality)
    : expectedOutputCardinality(expectedOutputCardinality),observedOutputCardinality(0)

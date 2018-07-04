@@ -241,3 +241,8 @@ unsigned FullyAggregatedIndexScan::ScanPrefix1::next()
    return count;
 }
 //---------------------------------------------------------------------------
+void FullyAggregatedIndexScan::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

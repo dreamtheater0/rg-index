@@ -14,6 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include <glog/logging.h>
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -81,42 +82,69 @@ static void evalQuery(Database& db,const string& query,bool silent)
       plan->print(0);
    if (getenv("DISABLESKIPPING"))
       Operator::disableSkipping=true;
+   unsigned iter=1;
+   if (getenv("ITER")) {
+      iter=atoi(getenv("ITER"));
+   }
 
    // Build a physical plan
    TemporaryDictionary tempDict(db.getDictionary());
    Runtime runtime(db,0,&tempDict);
-   Operator* operatorTree=CodeGen().translate(runtime,queryGraph,plan,silent);
 
-   if (getenv("SHOWPLAN")) {
-      DebugPlanPrinter out(runtime,false);
-      operatorTree->print(out);
+   unsigned time=0;
+   unsigned final = 0, intermediate = 0;
+   for(unsigned i=0; i<iter; i++) {
+      Operator* operatorTree=CodeGen().translate(runtime,queryGraph,plan,silent);
+
+      if (i==0 && getenv("SHOWPLAN")) {
+         DebugPlanPrinter out(runtime,false);
+         operatorTree->print(out);
+      }
+
+      // And execute it
+      Scheduler scheduler;
+      Timestamp start;
+      scheduler.execute(operatorTree);
+      Timestamp stop;
+      time+=(stop-start);
+      
+      if (i==0)
+         operatorTree->getStat(final, intermediate);
+      if (i==0 && getenv("SHOWCARD")) {
+         DebugPlanPrinter out(runtime,true);
+         operatorTree->print(out);
+      }
+      delete operatorTree;
    }
+   cout << "Final results: " << final << endl;
+   cout << "Intermediate results: " << intermediate << endl;
+   cout << "Execution time: " << (time/iter) << " msec." << endl;
 
-   // And execute it
-   Scheduler scheduler;
-   Timestamp start;
-   scheduler.execute(operatorTree);
-   Timestamp stop;
-   cout << "Execution time: " << (stop-start) << " ms" << endl;
-
-   if (getenv("SHOWCARD")) {
-      DebugPlanPrinter out(runtime,true);
-      operatorTree->print(out);
-   }
-
-   delete operatorTree;
+}
+//---------------------------------------------------------------------------
+static bool readLine(string& query)
+   // Read a single line
+{
+#ifdef CONFIG_LINEEDITOR
+   // Use the lineeditor interface
+   static lineeditor::LineInput editHistory(L">");
+   return editHistory.readUtf8(query);
+#else
+   // Default fallback
+   cerr << ">"; cerr.flush();
+   return getline(cin,query);
+#endif
 }
 //---------------------------------------------------------------------------
 int main(int argc,char* argv[])
 {
    // Check the arguments
    if (argc<2) {
-      cout << "usage: " << argv[0] << " <database> [sparqlfile] [--silent]" << endl;
+      cout << "usage: " << argv[0] << " <database> [sparqlfile]" << endl;
       return 1;
    }
-   bool silent=false;
-   if ((argc>3)&&(string(argv[3])=="--silent"))
-      silent=true;
+
+   google::InitGoogleLogging(argv[0]);
 
    // Open the database
    Database db;
@@ -134,11 +162,23 @@ int main(int argc,char* argv[])
          return 1;
       }
       query=readInput(in);
+      // And evaluate it
+      evalQuery(db,query,true);
    } else {
-      query=readInput(cin);
+      while (true) {
+         string query;
+         if (!readLine(query))
+            break;
+         if (query=="") continue;
+
+         if ((query=="quit")||(query=="exit")) {
+            break;
+         } else {
+            evalQuery(db,query,true);
+         }
+         cout.flush();
+      }
    }
 
-   // And evaluate it
-   evalQuery(db,query,silent);
 }
 //---------------------------------------------------------------------------

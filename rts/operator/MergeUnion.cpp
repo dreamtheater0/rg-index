@@ -160,3 +160,8 @@ void MergeUnion::getAsyncInputCandidates(Scheduler& scheduler)
    right->getAsyncInputCandidates(scheduler);
 }
 //---------------------------------------------------------------------------
+void MergeUnion::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

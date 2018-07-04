@@ -20,6 +20,10 @@ class FilePartition;
 class DatabasePartition;
 class DictionarySegment;
 class ExactStatisticsSegment;
+class RPathTreeIndex;
+class RPathStat;
+class CSet;
+class RGindex;
 //---------------------------------------------------------------------------
 /// Access to the RDF database
 class Database
@@ -30,6 +34,9 @@ class Database
       Order_Subject_Predicate_Object=0,Order_Subject_Object_Predicate,Order_Object_Predicate_Subject,
       Order_Object_Subject_Predicate,Order_Predicate_Subject_Object,Order_Predicate_Object_Subject
    };
+
+   /// The size of a page
+   static const unsigned pageSize = 16384;
 
    private:
    /// The underlying file
@@ -72,6 +79,16 @@ class Database
 
    /// Get the first partition
    DatabasePartition& getFirstPartition() { return *partition; }
+
+   /// RPath Filter
+   RPathTreeIndex *rpathTreeIdx;
+   RPathStat *rpathStat;
+   unsigned maxL;
+   double alpha;
+   CSet *cset;
+
+   /// RG-index
+   RGindex *rgindex;
 };
 //---------------------------------------------------------------------------
 #endif

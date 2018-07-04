@@ -1,0 +1,10 @@
+src_rpath:=				            	\
+	rpath/RPathSegment.cpp				\
+   rpath/RPathQueryGraph.cpp        \
+   rpath/PPath.cpp                  \
+   rpath/RPathTreeIndex.cpp         \
+   rpath/RPathFilter.cpp            \
+   rpath/CSet.cpp                   \
+   rpath/RPathStat.cpp
+
+#	rpath/RPathIndexScan.cpp			\

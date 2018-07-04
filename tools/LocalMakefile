@@ -17,7 +17,6 @@ include tools/rdf3xembedded/LocalMakefile
 include tools/rdf3xload/LocalMakefile
 include tools/rdf3xreorg/LocalMakefile
 include tools/rdf3xupdate/LocalMakefile
-include tools/printscan/LocalMakefile
 include tools/rdf3xquery/LocalMakefile
 include tools/resolvestrings/LocalMakefile
 include tools/runbenchmark/LocalMakefile
@@ -25,6 +24,14 @@ include tools/transactiontests/LocalMakefile
 include tools/translatesparql/LocalMakefile
 include tools/updatetest/LocalMakefile
 include tools/checkupdates/LocalMakefile
+include tools/rpathbuild/LocalMakefile
+include tools/rpathstatbuild/LocalMakefile
+include tools/rpathupdate/LocalMakefile
+include tools/rpathread/LocalMakefile
+include tools/divider/LocalMakefile
+include tools/csbuild/LocalMakefile
+include tools/build_rg-index/LocalMakefile
+include tools/gspan_test/LocalMakefile
 
 src_tools:=				\
 	$(src_tools_buildmonetdb)	\
@@ -47,7 +54,13 @@ src_tools:=				\
 	$(src_tools_resolvestrings)	\
 	$(src_tools_translatesparql)	\
 	$(src_tools_updatetest)     \
-	$(src_tools_checkupdates)   \
-    $(src_tools_printscan)
-	
-
+	$(src_tools_checkupdates)     \
+   $(src_tools_divider)       \
+	$(src_tools_rpathbuild)    \
+	$(src_tools_rpathstatbuild)    \
+	$(src_tools_rpathupdate)    \
+	$(src_tools_rpathread)    \
+	$(src_tools_csbuild)    \
+	$(src_tools_rpathbuild2_exe)  \
+   $(src_tools_build_rg-index)   \
+   $(src_tools_gspan_test)

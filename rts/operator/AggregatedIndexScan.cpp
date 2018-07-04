@@ -361,3 +361,8 @@ unsigned AggregatedIndexScan::ScanPrefix12::next()
    return count;
 }
 //---------------------------------------------------------------------------
+void AggregatedIndexScan::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

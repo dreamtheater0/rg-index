@@ -1,6 +1,7 @@
 #include "rts/operator/MergeJoin.hpp"
 #include "rts/operator/PlanPrinter.hpp"
 #include "rts/runtime/Runtime.hpp"
+#include <stdlib.h>
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -377,5 +378,12 @@ void MergeJoin::getAsyncInputCandidates(Scheduler& scheduler)
 {
    left->getAsyncInputCandidates(scheduler);
    right->getAsyncInputCandidates(scheduler);
+}
+//---------------------------------------------------------------------------
+void MergeJoin::getStat(unsigned &final,unsigned &intermediate)
+{
+   intermediate += observedOutputCardinality;
+   left->getStat(final, intermediate);
+   right->getStat(final, intermediate);
 }
 //---------------------------------------------------------------------------

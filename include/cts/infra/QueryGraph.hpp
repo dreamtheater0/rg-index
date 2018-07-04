@@ -13,6 +13,7 @@
 #include <vector>
 #include <string>
 #include <set>
+class RPathQueryGraph;
 //---------------------------------------------------------------------------
 /// A query graph representing a SPARQL query
 class QueryGraph
@@ -176,6 +177,9 @@ class QueryGraph
    order_iterator orderBegin() const { return order.begin(); }
    /// Iterator over the sort order
    order_iterator orderEnd() const { return order.end(); }
+
+   RPathQueryGraph* rpathQueryGraph;
+   void print();
 };
 //---------------------------------------------------------------------------
 #endif

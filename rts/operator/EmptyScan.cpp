@@ -50,3 +50,8 @@ void EmptyScan::getAsyncInputCandidates(Scheduler& /*scheduler*/)
 {
 }
 //---------------------------------------------------------------------------
+void EmptyScan::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

@@ -197,3 +197,8 @@ void Sort::getAsyncInputCandidates(Scheduler& scheduler)
    input->getAsyncInputCandidates(scheduler);
 }
 //---------------------------------------------------------------------------
+void Sort::getStat(unsigned &/*final*/,unsigned &/*intermediate*/)
+{
+
+}
+//---------------------------------------------------------------------------

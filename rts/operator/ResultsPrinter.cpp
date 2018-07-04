@@ -8,6 +8,7 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <stdlib.h>
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -118,6 +119,18 @@ unsigned ResultsPrinter::first()
    map<unsigned,CacheEntry> stringCache;
    unsigned minCount=(duplicateHandling==ShowDuplicates)?2:1;
    unsigned entryCount=0;
+
+   if (getenv("RAWID")) {
+      do {
+         for (vector<Register*>::const_iterator iter=output.begin(),limit=output.end();iter!=limit;++iter) {
+            unsigned id=(*iter)->value;
+            cout << id << " ";
+         }
+         cout << endl;
+      } while ((count=input->next())!=0);
+      return 1;
+   }
+
    do {
       if (count<minCount) continue;
       results.push_back(count);
@@ -128,6 +141,10 @@ unsigned ResultsPrinter::first()
       }
       if ((++entryCount)>=this->limit) break;
    } while ((count=input->next())!=0);
+
+   // Skip printing the results?
+   if (silent)
+      return 1;
 
    // Lookup the strings
    set<unsigned> subTypes;
@@ -151,10 +168,6 @@ unsigned ResultsPrinter::first()
          diffIndex->lookupById(*iter,c.start,c.stop,c.type,c.subType); else
          dictionary.lookupById(*iter,c.start,c.stop,c.type,c.subType);
    }
-
-   // Skip printing the results?
-   if (silent)
-      return 1;
 
    // Expand duplicates?
    unsigned columns=output.size();
@@ -207,5 +220,11 @@ void ResultsPrinter::getAsyncInputCandidates(Scheduler& scheduler)
    // Register parts of the tree that can be executed asynchronous
 {
    input->getAsyncInputCandidates(scheduler);
+}
+//---------------------------------------------------------------------------
+void ResultsPrinter::getStat(unsigned &final,unsigned &intermediate)
+{
+   final = input->observedOutputCardinality;
+   input->getStat(final, intermediate);
 }
 //---------------------------------------------------------------------------

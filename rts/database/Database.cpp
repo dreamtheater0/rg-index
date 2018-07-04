@@ -8,7 +8,13 @@
 #include "rts/segment/FactsSegment.hpp"
 #include "rts/segment/FullyAggregatedFactsSegment.hpp"
 #include <iostream>
+#include <cstdlib>
 #include <cassert>
+#include "rpath/RPathTreeIndex.hpp"
+#include "rpath/RPathStat.hpp"
+#include <string.h>
+#include "rpath/CSet.hpp"
+#include "rg-index/rg-index.hpp"
 //---------------------------------------------------------------------------
 // RDF-3X
 // (c) 2008 Thomas Neumann. Web site: http://www.mpi-inf.mpg.de/~neumann/rdf3x
@@ -26,6 +32,8 @@ Database::Database()
    : file(0),bufferManager(0),partition(0)
    // Constructor
 {
+   rpathTreeIdx = NULL;
+   rgindex = NULL;
 }
 //---------------------------------------------------------------------------
 Database::~Database()
@@ -99,6 +107,52 @@ bool Database::open(const char* fileName,bool readOnly)
    // Open a database
 {
    close();
+
+   if (getenv("RPATH")) {
+      cerr << "Open DB with RP-filter support" << endl;
+      char rpathdir[256];
+      if (getenv("RPATHDIR")){
+         strcpy(rpathdir, getenv("RPATHDIR"));
+      }
+      else {
+         strcpy(rpathdir, ".");
+      }
+
+      if (!getenv("MAXL") || atoi(getenv("MAXL")) < 0) {
+         cerr << "Invalid MAXL environmental variable: " << getenv("MAXL");
+         cout << endl;
+         return false;
+      }
+      maxL=atoi(getenv("MAXL"));
+      rpathTreeIdx = new RPathTreeIndex((char*) fileName, rpathdir, maxL);
+      rpathStat = new RPathStat((char *) fileName, rpathdir);
+      cset = new CSet((char *) fileName);
+      if (getenv("ALPHA")) {
+         alpha=atof(getenv("ALPHA"));
+      }
+      else alpha=0.5f;
+      cerr << " alpha: " << alpha << endl;
+   }
+
+   if (getenv("RGINDEX")) {
+      cerr << "Open DB with RG-index support" << endl;
+      char rpathdir[256];
+      if (getenv("RGINDEXDIR")){
+         strcpy(rpathdir, getenv("RGINDEXDIR"));
+      }
+      else {
+         strcpy(rpathdir, ".");
+      }
+
+      if (!getenv("MAXL") || atoi(getenv("MAXL")) < 0) {
+         cerr << "Invalid MAXL environmental variable: " << getenv("MAXL");
+         cout << endl;
+         return false;
+      }
+      maxL=atoi(getenv("MAXL"));
+      rgindex = new RGindex((char*) fileName, rpathdir, maxL);
+      cset = new CSet((char *) fileName);
+   }
 
    // Try to open the file
    file=new FilePartition();

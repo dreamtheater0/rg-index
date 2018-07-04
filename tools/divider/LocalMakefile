@@ -1,0 +1,5 @@
+src_tools_divider:=              \
+   tools/divider/divider.cpp
+
+$(PREFIX)divider$(EXEEXT): $(addprefix $(PREFIX),$(src_tools_divider:.cpp=$(OBJEXT)) $(src_gspan:.cpp=$(OBJEXT)) $(src_rgindex:.cpp=$(OBJEXT))  $(src_infra:.cpp=$(OBJEXT)) $(src_rpath:.cpp=$(OBJEXT)) $(src_cts:.cpp=$(OBJEXT)) $(src_rts:.cpp=$(OBJEXT)))
+	$(buildexe)

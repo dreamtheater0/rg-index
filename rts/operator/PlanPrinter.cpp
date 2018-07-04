@@ -128,7 +128,7 @@ string DebugPlanPrinter::formatValue(unsigned value)
          result << '\"';
          for (const char* iter=start;iter!=stop;++iter)
            result << *iter;
-         result << '\"';
+         result << '\"' << " (" << value << ")";
       } else result << "@?" << value;
    } else {
       result << "NULL";

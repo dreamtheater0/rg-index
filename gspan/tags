@@ -1,0 +1,155 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CPP	Makefile	/^CPP = g++$/;"	m
+CPPFLAGS	Makefile	/^CPPFLAGS = -DNDEBUG -O3 -fomit-frame-pointer -funroll-loops -fPIC \\$/;"	m
+DFS	gspan.h	/^	DFS(): from(0), to(0), fromlabel(0), elabel(0), tolabel(0) {};$/;"	f	class:GSPAN::DFS
+DFS	gspan.h	/^class DFS {$/;"	c	namespace:GSPAN
+DFSCode	gspan.h	/^struct DFSCode: public std::vector <DFS> {$/;"	s	namespace:GSPAN
+DFS_CODE	gspan.h	/^	DFSCode                     DFS_CODE;$/;"	m	class:GSPAN::gSpan
+DFS_CODE_IS_MIN	gspan.h	/^	DFSCode                     DFS_CODE_IS_MIN;$/;"	m	class:GSPAN::gSpan
+Edge	gspan.h	/^	Edge(): from(0), to(0), elabel(0), id(0) {};$/;"	f	struct:GSPAN::Edge
+Edge	gspan.h	/^struct Edge {$/;"	s	namespace:GSPAN
+EdgeList	gspan.h	/^typedef std::vector <Edge*> EdgeList;$/;"	t	namespace:GSPAN
+GRAPH_IS_MIN	gspan.h	/^	Graph                       GRAPH_IS_MIN;$/;"	m	class:GSPAN::gSpan
+GSPAN	dfs.cpp	/^namespace GSPAN {$/;"	n	file:
+GSPAN	graph.cpp	/^namespace GSPAN {$/;"	n	file:
+GSPAN	gspan.cpp	/^namespace GSPAN {$/;"	n	file:
+GSPAN	gspan.h	/^namespace GSPAN {$/;"	n
+GSPAN	ismin.cpp	/^namespace GSPAN {$/;"	n	file:
+GSPAN	misc.cpp	/^namespace GSPAN {$/;"	n	file:
+Graph	gspan.h	/^	Graph (bool _directed)$/;"	f	class:GSPAN::Graph
+Graph	gspan.h	/^	Graph(): edge_size_(0), directed(false) {};$/;"	f	class:GSPAN::Graph
+Graph	gspan.h	/^class Graph: public std::vector<Vertex> {$/;"	c	namespace:GSPAN
+History	gspan.h	/^	History (Graph& g, PDFS *p) { build (g, p); }$/;"	f	class:GSPAN::History
+History	gspan.h	/^	History() {};$/;"	f	class:GSPAN::History
+History	gspan.h	/^class History: public std::vector<Edge*> {$/;"	c	namespace:GSPAN
+ID	gspan.h	/^	unsigned int ID;$/;"	m	class:GSPAN::gSpan
+INCLUDE	Makefile	/^INCLUDE=-I${MATLABROOT}\/extern\/include$/;"	m
+MEX	Makefile	/^MEX=${MATLABROOT}\/bin\/mex$/;"	m
+MEXFLAGS	Makefile	/^MEXFLAGS=-O$/;"	m
+OBJ	Makefile	/^OBJ = graph.o misc.o dfs.o ismin.o gspan.o  main.o$/;"	m
+OPT	main.cpp	25;"	d	file:
+PDFS	gspan.h	/^	PDFS(): id(0), edge(0), prev(0) {};$/;"	f	struct:GSPAN::PDFS
+PDFS	gspan.h	/^struct PDFS {$/;"	s	namespace:GSPAN
+Projected	gspan.h	/^class Projected: public std::vector<PDFS> {$/;"	c	namespace:GSPAN
+Projected_iterator1	gspan.h	/^	typedef std::map<int, Projected>::iterator                                   Projected_iterator1;$/;"	t	class:GSPAN::gSpan
+Projected_iterator2	gspan.h	/^	typedef std::map<int, std::map <int, Projected> >::iterator                  Projected_iterator2;$/;"	t	class:GSPAN::gSpan
+Projected_iterator3	gspan.h	/^	typedef std::map<int, std::map <int, std::map <int, Projected> > >::iterator Projected_iterator3;$/;"	t	class:GSPAN::gSpan
+Projected_map1	gspan.h	/^	typedef std::map<int, Projected>                                             Projected_map1;$/;"	t	class:GSPAN::gSpan
+Projected_map2	gspan.h	/^	typedef std::map<int, std::map <int, Projected> >                            Projected_map2;$/;"	t	class:GSPAN::gSpan
+Projected_map3	gspan.h	/^	typedef std::map<int, std::map <int, std::map <int, Projected> > >           Projected_map3;$/;"	t	class:GSPAN::gSpan
+Projected_riterator3	gspan.h	/^	typedef std::map<int, std::map <int, std::map <int, Projected> > >::reverse_iterator Projected_riterator3;$/;"	t	class:GSPAN::gSpan
+RMPath	gspan.h	/^typedef std::vector<int> RMPath;$/;"	t	namespace:GSPAN
+TRANS	gspan.h	/^	std::vector < Graph >       TRANS;$/;"	m	class:GSPAN::gSpan
+Vertex	gspan.h	/^class Vertex$/;"	c	namespace:GSPAN
+_swap	gspan.h	/^template <class T> inline void _swap (T &x, T &y) { T z = x; x = y; y = z; }$/;"	f	namespace:GSPAN
+bestGraphs	gspan.h	/^	std::vector<Graph> bestGraphs;$/;"	m	class:GSPAN::gSpan
+bestGraphsCounts	gspan.h	/^	std::vector<std::map<unsigned int, unsigned int> > bestGraphsCounts;$/;"	m	class:GSPAN::gSpan
+bestGraphsGain	gspan.h	/^	std::vector<double> bestGraphsGain;$/;"	m	class:GSPAN::gSpan
+bestGraphsY	gspan.h	/^	std::vector<double> bestGraphsY;$/;"	m	class:GSPAN::gSpan
+boost	gspan.h	/^	bool boost;$/;"	m	class:GSPAN::gSpan
+boostN	gspan.h	/^	unsigned int boostN;	\/\/ Number of top-n graphs to collect$/;"	m	class:GSPAN::gSpan
+boostTau	gspan.h	/^	double boostTau;	\/\/ lower bound to be a suitable pattern.$/;"	m	class:GSPAN::gSpan
+boostType	gspan.h	/^	int boostType;	\/\/ 1: 1.5-class, 2: 2-class LPBoosting$/;"	m	class:GSPAN::gSpan
+boostWeightSum	gspan.h	/^	double boostWeightSum;	\/\/ \\sum_{i=1}^L y_i d_i$/;"	m	class:GSPAN::gSpan
+boostWeights	gspan.h	/^	std::vector<double> boostWeights;	\/\/ sample weights$/;"	m	class:GSPAN::gSpan
+boostY	gspan.h	/^	std::vector<double> boostY;	\/\/ +1\/-1 labels$/;"	m	class:GSPAN::gSpan
+boost_setup	gspan.cpp	/^void gSpan::boost_setup (unsigned int _boostN, double _boostTau,$/;"	f	class:GSPAN::gSpan
+boostmax	gspan.h	/^	unsigned int boostmax;$/;"	m	class:GSPAN::gSpan
+boostseen	gspan.h	/^	unsigned int boostseen;$/;"	m	class:GSPAN::gSpan
+build	misc.cpp	/^void History::build (Graph &graph, PDFS *e)$/;"	f	class:GSPAN::History
+buildEdge	graph.cpp	/^void Graph::buildEdge ()$/;"	f	class:GSPAN::Graph
+buildRMPath	misc.cpp	/^const RMPath &DFSCode::buildRMPath ()$/;"	f	class:GSPAN::DFSCode
+check	graph.cpp	/^void Graph::check (void)$/;"	f	class:GSPAN::Graph
+counts	gspan.h	/^		std::map<unsigned int, unsigned int> counts;$/;"	m	class:GSPAN::gSpan::mexOutputG
+directed	gspan.h	/^	bool directed;$/;"	m	class:GSPAN::Graph
+directed	gspan.h	/^	bool directed;$/;"	m	class:GSPAN::gSpan
+edge	gspan.h	/^	Edge        *edge;$/;"	m	struct:GSPAN::PDFS
+edge	gspan.h	/^	std::vector<Edge> edge;$/;"	m	class:GSPAN::Vertex
+edge	gspan.h	/^	std::vector<int> edge;$/;"	m	class:GSPAN::History
+edge_iterator	gspan.h	/^	typedef std::vector<Edge>::iterator edge_iterator;$/;"	t	class:GSPAN::Vertex
+edge_size	gspan.h	/^	unsigned int edge_size ()   { return edge_size_; }$/;"	f	class:GSPAN::Graph
+edge_size_	gspan.h	/^	unsigned int edge_size_;$/;"	m	class:GSPAN::Graph
+elabel	gspan.h	/^	int elabel;$/;"	m	class:GSPAN::DFS
+elabel	gspan.h	/^	int elabel;$/;"	m	struct:GSPAN::Edge
+enc	gspan.h	/^	bool enc;$/;"	m	class:GSPAN::gSpan
+from	gspan.h	/^	int from;$/;"	m	class:GSPAN::DFS
+from	gspan.h	/^	int from;$/;"	m	struct:GSPAN::Edge
+fromGraph	dfs.cpp	/^DFSCode::fromGraph (Graph &g)$/;"	f	class:GSPAN::DFSCode
+fromlabel	gspan.h	/^	int fromlabel;$/;"	m	class:GSPAN::DFS
+gSpan	gspan.cpp	/^gSpan::gSpan (void)$/;"	f	class:GSPAN::gSpan
+gSpan	gspan.h	/^class gSpan {$/;"	c	namespace:GSPAN
+gain	gspan.h	/^	double (gSpan::* gain)(Projected &projected, double y);$/;"	m	class:GSPAN::gSpan
+gain1d5	gspan.cpp	/^gSpan::gain1d5 (Projected &projected, double y)$/;"	f	class:GSPAN::gSpan
+gain2	gspan.cpp	/^gSpan::gain2 (Projected &projected, double y)$/;"	f	class:GSPAN::gSpan
+gainbound	gspan.h	/^	double (gSpan::* gainbound)(Projected &projected);$/;"	m	class:GSPAN::gSpan
+gainbound1d5	gspan.cpp	/^gSpan::gainbound1d5 (Projected &projected)$/;"	f	class:GSPAN::gSpan
+gainbound2	gspan.cpp	/^gSpan::gainbound2 (Projected &projected)$/;"	f	class:GSPAN::gSpan
+get_backward	misc.cpp	/^Edge *get_backward (Graph &graph, Edge* e1, Edge* e2, History& history)$/;"	f	namespace:GSPAN
+get_forward_pure	misc.cpp	/^bool get_forward_pure (Graph &graph, Edge *e, int minlabel, History& history, EdgeList &result)$/;"	f	namespace:GSPAN
+get_forward_rmpath	misc.cpp	/^bool get_forward_rmpath (Graph &graph, Edge *e, int minlabel, History& history, EdgeList &result)$/;"	f	namespace:GSPAN
+get_forward_root	misc.cpp	/^bool get_forward_root (Graph &g, Vertex &v, EdgeList &result)$/;"	f	namespace:GSPAN
+graph	gspan.h	/^		mxArray* graph;$/;"	m	class:GSPAN::gSpan::mexOutputG
+hasEdge	gspan.h	/^	bool hasEdge   (unsigned int id) { return (bool)edge[id]; }$/;"	f	class:GSPAN::History
+hasVertex	gspan.h	/^	bool hasVertex (unsigned int id) { return (bool)vertex[id]; }$/;"	f	class:GSPAN::History
+id	gspan.h	/^	unsigned int id;	\/\/ ID of the original input graph$/;"	m	struct:GSPAN::PDFS
+id	gspan.h	/^	unsigned int id;$/;"	m	struct:GSPAN::Edge
+is_min	ismin.cpp	/^bool gSpan::is_min ()$/;"	f	class:GSPAN::gSpan
+label	gspan.h	/^	int label;$/;"	m	class:GSPAN::Vertex
+main	main.cpp	/^int main (int argc, char **argv)$/;"	f
+maxpat_max	gspan.h	/^	unsigned int maxpat_max;	\/\/ upper bound on node count$/;"	m	class:GSPAN::gSpan
+maxpat_min	gspan.h	/^	unsigned int maxpat_min;	\/\/ lower bound on node count$/;"	m	class:GSPAN::gSpan
+mex	gspan.h	/^	bool mex;	\/\/ Shall we output to matlab structures?$/;"	m	class:GSPAN::gSpan
+mexAppendGraph	gspan.cpp	/^void gSpan::mexAppendGraph (Graph* g, unsigned int ID, double par,$/;"	f	class:GSPAN::gSpan
+mexFunction	mexgspan.cpp	/^mexFunction (int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])$/;"	f
+mexOutputG	gspan.h	/^	class mexOutputG {$/;"	c	class:GSPAN::gSpan
+mexOutputLast	gspan.h	/^	mexOutputG* mexOutputLast;$/;"	m	class:GSPAN::gSpan
+mexOutputRoot	gspan.h	/^	mexOutputG* mexOutputRoot;$/;"	m	class:GSPAN::gSpan
+mexprint	graph.cpp	/^void Graph::mexprint (void)$/;"	f	class:GSPAN::Graph
+minsup	gspan.h	/^	unsigned int minsup;$/;"	m	class:GSPAN::gSpan
+next	gspan.h	/^		struct mexOutputG* next;$/;"	m	class:GSPAN::gSpan::mexOutputG	typeref:struct:GSPAN::gSpan::mexOutputG::mexOutputG
+nodeCount	dfs.cpp	/^DFSCode::nodeCount (void)$/;"	f	class:GSPAN::DFSCode
+operator !=	gspan.h	/^	friend bool operator != (const DFS &d1, const DFS &d2) { return (! (d1 == d2)); }$/;"	f	class:GSPAN::DFS
+operator ==	gspan.h	/^	friend bool operator == (const DFS &d1, const DFS &d2)$/;"	f	class:GSPAN::DFS
+os	gspan.h	/^	std::ostream* os;$/;"	m	class:GSPAN::gSpan
+par	gspan.h	/^		double par;$/;"	m	class:GSPAN::gSpan::mexOutputG
+pop	gspan.h	/^	void pop () { resize (size()-1); }$/;"	f	struct:GSPAN::DFSCode
+prev	gspan.h	/^	PDFS        *prev;$/;"	m	struct:GSPAN::PDFS
+project	gspan.cpp	/^void gSpan::project (Projected &projected)$/;"	f	class:GSPAN::gSpan
+project_is_min	ismin.cpp	/^bool gSpan::project_is_min (Projected &projected)$/;"	f	class:GSPAN::gSpan
+push	gspan.h	/^	void push (int from, int to, int elabel)$/;"	f	class:GSPAN::Vertex
+push	gspan.h	/^	void push (int from, int to, int fromlabel, int elabel, int tolabel)$/;"	f	struct:GSPAN::DFSCode
+push	gspan.h	/^	void push (int id, Edge *edge, PDFS *prev)$/;"	f	class:GSPAN::Projected
+read	graph.cpp	/^std::istream &Graph::read (std::istream &is)$/;"	f	class:GSPAN::Graph
+read	graph.cpp	/^void Graph::read (const mxArray* graph)$/;"	f	class:GSPAN::Graph
+read	gspan.cpp	/^std::istream &gSpan::read (std::istream &is)$/;"	f	class:GSPAN::gSpan
+read	gspan.cpp	/^void gSpan::read (const mxArray* graphs)$/;"	f	class:GSPAN::gSpan
+report	gspan.cpp	/^void gSpan::report (Projected &projected, unsigned int sup)$/;"	f	class:GSPAN::gSpan
+report_boosting	gspan.cpp	/^void gSpan::report_boosting (Projected &projected, unsigned int sup,$/;"	f	class:GSPAN::gSpan
+report_boosting_inter	gspan.cpp	/^void gSpan::report_boosting_inter (Graph &g, unsigned int sup,$/;"	f	class:GSPAN::gSpan
+report_single	gspan.cpp	/^void gSpan::report_single (Graph &g, std::map<unsigned int, unsigned int>& ncount)$/;"	f	class:GSPAN::gSpan
+rmpath	gspan.h	/^	RMPath rmpath;$/;"	m	struct:GSPAN::DFSCode
+run	gspan.cpp	/^void gSpan::run (std::istream &is, std::ostream &_os,$/;"	f	class:GSPAN::gSpan
+run_graphs	gspan.cpp	/^void gSpan::run_graphs (const mxArray* graphs, int nlhs, mxArray* plhs[],$/;"	f	class:GSPAN::gSpan
+run_intern	gspan.cpp	/^void gSpan::run_intern (void)$/;"	f	class:GSPAN::gSpan
+singleVertex	gspan.h	/^	std::map<unsigned int, std::map<unsigned int, unsigned int> > singleVertex;$/;"	m	class:GSPAN::gSpan
+singleVertexLabel	gspan.h	/^	std::map<unsigned int, unsigned int> singleVertexLabel;$/;"	m	class:GSPAN::gSpan
+support	gspan.cpp	/^gSpan::support (Projected &projected)$/;"	f	class:GSPAN::gSpan
+support_counts	gspan.cpp	/^gSpan::support_counts (Projected &projected)$/;"	f	class:GSPAN::gSpan
+to	gspan.h	/^	int to;$/;"	m	class:GSPAN::DFS
+to	gspan.h	/^	int to;$/;"	m	struct:GSPAN::Edge
+toGraph	dfs.cpp	/^bool DFSCode::toGraph (Graph &g)$/;"	f	class:GSPAN::DFSCode
+tokenize	graph.cpp	/^void tokenize (const char *str, Iterator iterator)$/;"	f	namespace:GSPAN
+tolabel	gspan.h	/^	int tolabel;$/;"	m	class:GSPAN::DFS
+usage	main.cpp	/^void usage (void)$/;"	f
+vertex	gspan.h	/^	std::vector<int> vertex;$/;"	m	class:GSPAN::History
+vertex_iterator	gspan.h	/^	typedef std::vector<Vertex>::iterator vertex_iterator;$/;"	t	class:GSPAN::Graph
+vertex_size	gspan.h	/^	unsigned int vertex_size () { return (unsigned int)size(); } \/\/ wrapper$/;"	f	class:GSPAN::Graph
+where	gspan.h	/^	bool where;$/;"	m	class:GSPAN::gSpan
+write	dfs.cpp	/^std::ostream &DFSCode::write (std::ostream &os)$/;"	f	class:GSPAN::DFSCode
+write	graph.cpp	/^std::ostream &Graph::write (std::ostream &os)$/;"	f	class:GSPAN::Graph
+writemex	graph.cpp	/^mxArray* Graph::writemex (void)$/;"	f	class:GSPAN::Graph
